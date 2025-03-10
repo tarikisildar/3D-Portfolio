@@ -1,53 +1,52 @@
 # Tarik Isildar Portfolio
 
-An interactive portfolio website inspired by Bruno Simon's approach, built with Next.js, Three.js, and TailwindCSS.
+An interactive 3D portfolio website built with Next.js, Three.js, and TailwindCSS. Experience a unique way to showcase projects with an interactive 3D environment.
+
+![Portfolio Preview](/public/images/preview.png)
 
 ## Features
 
-- Interactive 3D background experience using Three.js
-- Responsive design for all device sizes
-- Projects showcase with filtering by technology
-- About page with animated skill bars
-- Printable CV page
-- Individual project detail pages
-- Dark/light mode support based on system preferences
+- **Interactive 3D Room Environment**: Navigate a 3D space with camera animations for each section
+- **Video Screen**: Interactive video screen in the 3D room that can be toggled
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Project Showcase**: Detailed project cards with filtering capabilities
+- **Blog**: Markdown-based blog with syntax highlighting
+- **Printable CV**: Downloadable and printable resume
+- **Optimized Performance**: Built with performance in mind, using React 18 and Next.js 15
+- **Modern UI**: Clean, modern UI with TailwindCSS v4
 
 ## Technologies Used
 
-- **Next.js**: React framework for server-side rendering and routing
-- **TypeScript**: For type safety and better developer experience
-- **Three.js**: For 3D graphics and interactive elements
-- **React Three Fiber**: React renderer for Three.js
-- **TailwindCSS**: Utility-first CSS framework for styling
-- **ESLint**: For code linting
+- **Frontend**: Next.js 15, React 18, TypeScript
+- **3D Graphics**: Three.js, React Three Fiber, React Three Drei
+- **Styling**: TailwindCSS v4, tailwindcss/typography
+- **Content**: Markdown for blog posts
+- **Deployment**: Vercel
 
 ## Project Structure
 
 ```
 .
-├── public/              # Static assets (images, etc.)
+├── public/              # Static assets (images, 3D models, etc.)
 ├── src/                 # Source code
 │   ├── app/             # Next.js app router pages
 │   │   ├── about/       # About page
+│   │   ├── blog/        # Blog listing and individual posts
+│   │   │   └── [slug]/  # Individual blog post page
 │   │   ├── cv/          # CV page
 │   │   ├── projects/    # Projects listing page
 │   │   │   └── [slug]/  # Individual project detail page
-│   │   ├── globals.css  # Global CSS styles
-│   │   ├── layout.tsx   # Root layout component
-│   │   ├── page.tsx     # Home page
-│   │   └── not-found.tsx # 404 page
 │   ├── components/      # React components
 │   │   ├── three/       # Three.js related components
-│   │   │   └── Experience.tsx # Main 3D experience
+│   │   │   ├── RoomScene.tsx # 3D room environment
+│   │   │   └── Scene3D.tsx   # Main 3D scene wrapper
 │   │   └── ui/          # UI components
-│   │       ├── Footer.tsx
-│   │       ├── Header.tsx
-│   │       ├── Hero.tsx
-│   │       └── ProjectCard.tsx
-│   └── data/            # Data files
-│       ├── about.ts     # About page data
-│       └── projects.ts  # Projects data
-└── package.json         # Project dependencies and scripts
+│   ├── content/         # Markdown content
+│   │   └── blog/        # Blog posts in markdown
+│   ├── data/            # Data files
+│   │   └── projects.ts  # Projects data
+│   └── utils/           # Utility functions
+└── next.config.mjs      # Next.js configuration
 ```
 
 ## How to Update
@@ -62,36 +61,30 @@ To add or edit projects, modify the `src/data/projects.ts` file. Each project fo
   title: string;
   slug: string; // URL-friendly name
   description: string;
-  longDescription: string[]; // Array of paragraphs
   imageUrl: string;
   tags: string[];
-  demoUrl?: string; // Optional
-  codeUrl?: string; // Optional
-  featured: boolean; // Whether to show on homepage
+  links?: ProjectLink[];
+  featured: boolean;
+  category: 'Game' | 'Software' | 'Web' | 'Other';
+  detailedContent?: DetailedContent[]; // Array of content blocks
 }
 ```
 
-Add new project images to the `public/images/` directory.
+### Adding Blog Posts
 
-### Updating Personal Information
+Create new markdown files in the `src/content/blog/` directory. Each blog post should have a format like:
 
-To update your personal information, edit the `src/data/about.ts` file. This includes:
+```markdown
+# Blog Post Title
 
-- Bio
-- Skills
-- Work Experience
-- Education
+Your content here...
 
-### Modifying the 3D Experience
+## Subheading
 
-The 3D interactive background can be modified in `src/components/three/Experience.tsx`. The current implementation includes:
+More content...
+```
 
-- Interactive 3D cubes that respond to hover
-- Floating animation
-- Stars background
-- Orbit controls for camera rotation
-
-## Getting Started
+## Development
 
 ### Prerequisites
 
@@ -100,18 +93,18 @@ The 3D interactive background can be modified in `src/components/three/Experienc
 ### Installation
 
 1. Clone the repository:
-   ```
+   ```bash
    git clone https://github.com/tarikisildar/portfolio.git
    cd portfolio
    ```
 
 2. Install dependencies:
-   ```
+   ```bash
    npm install
    ```
 
 3. Run the development server:
-   ```
+   ```bash
    npm run dev
    ```
 
@@ -119,19 +112,56 @@ The 3D interactive background can be modified in `src/components/three/Experienc
 
 ### Building for Production
 
-```
+```bash
 npm run build
+npm run start
 ```
 
 ## Deployment
 
-This project can be deployed on any platform that supports Next.js applications, such as:
+This project is optimized for deployment on Vercel, but can be deployed on any platform that supports Next.js applications.
 
-- Vercel
-- Netlify
-- AWS Amplify
-- GitHub Pages
-- Your own server
+### Deploying to Vercel (Recommended)
+
+1. **Push your code to GitHub**
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push
+   ```
+
+2. **Set up Vercel Deployment**
+   - Go to [vercel.com](https://vercel.com) and sign up/in with GitHub
+   - Import your repository
+   - Configure the project settings:
+     - Framework Preset: Next.js
+     - Build Command: `npm run build`
+     - Output Directory: `.next` (default)
+   - Click "Deploy"
+
+3. **Set up a custom domain (optional)**
+   - In your Vercel dashboard, go to the project settings
+   - Navigate to "Domains"
+   - Add your custom domain and follow Vercel's DNS configuration instructions
+
+### Troubleshooting Deployment
+
+If you encounter TypeScript errors during deployment, check:
+- Parameter types in page components
+- TypeScript compatibility with your dependencies
+- Proper Next.js configuration in `next.config.mjs`
+
+## Performance Optimization
+
+This project includes several performance optimizations:
+- Lazy loading of 3D models and textures
+- Dynamic loading of heavy components
+- Optimized Three.js rendering with frustum culling
+- React.memo for performance-critical components
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
@@ -139,5 +169,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgements
 
-- Inspired by [Bruno Simon's portfolio](https://bruno-simon.com/)
+- 3D models and textures from various sources (see attributions in the footer)
 - Built with [Next.js](https://nextjs.org/) and [Three.js](https://threejs.org/)
+- Inspired by interactive 3D websites and modern portfolio designs
