@@ -1,0 +1,12 @@
+For the "Procrastinate" feature to show videos on the computer screen, please add video files to this directory.
+
+Suggested videos to add:
+1. cat.mp4 - A funny cat video
+2. coding.mp4 - A coding meme or animation
+3. meme.mp4 - Any popular internet meme
+4. loop.mp4 - A satisfying looping animation
+5. funny.mp4 - Any humorous short clip
+
+The videos should be short (5-15 seconds), optimized for web (low file size), and in MP4 format.
+
+Note: If no videos are found, the system will display a fallback "Procrastinating..." message on the screen.
