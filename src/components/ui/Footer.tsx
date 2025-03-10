@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import { useState } from 'react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
+  const [showAttributions, setShowAttributions] = useState(false)
 
   return (
     <footer className="relative z-10 border-t border-foreground/10 py-8 backdrop-blur-md bg-background/80">
@@ -103,9 +105,44 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="mt-8 border-t border-foreground/10 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-foreground/70">
-            &copy; {currentYear} Tarik Isildar. All rights reserved.
-          </p>
+          <div>
+            <p className="text-sm text-foreground/70">
+              &copy; {currentYear} Tarik Isildar. All rights reserved.
+            </p>
+            {/* 3D Model Attributions toggle */}
+            <button
+              onClick={() => setShowAttributions(!showAttributions)}
+              className="mt-2 text-xs text-foreground/40 hover:text-foreground/60 flex items-center"
+            >
+              <svg
+                className={`w-3 h-3 mr-1 transition-transform ${showAttributions ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              3D Model Attributions
+            </button>
+
+            {/* Attributions content */}
+            {showAttributions && (
+              <div className="mt-3 p-3 bg-foreground/5 rounded-md text-xs text-foreground/60 max-w-2xl">
+                <p className="font-medium mb-1">3D Models:</p>
+                <ul className="space-y-1">
+                  <li>Boombox by Poly by Google [CC-BY] via Poly Pizza</li>
+                  <li>Blackboard by Poly by Google [CC-BY] via Poly Pizza</li>
+                  <li>Air Fryer by Zsky [CC-BY] via Poly Pizza</li>
+                  <li>Coffee Machine by J-Toastie [CC-BY] via Poly Pizza</li>
+                  <li>Furniture Set by Kenney</li>
+                  <li>Graphics card by pgonarg [CC-BY] via Poly Pizza</li>
+                  <li>Gaming Computer by Alex Safayan [CC-BY] via Poly Pizza</li>
+                  <li>Radiator by Poly by Google [CC-BY] via Poly Pizza</li>
+                  <li>Round Table by CMHT Oculus [CC-BY] via Poly Pizza</li>
+                </ul>
+              </div>
+            )}
+          </div>
           <p className="mt-4 sm:mt-0 text-xs text-foreground/50">
             Built with Next.js, Three.js, and ❤️
           </p>

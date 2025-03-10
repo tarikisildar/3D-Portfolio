@@ -123,7 +123,7 @@ export default function Scene3D() {
           preserveDrawingBuffer: true, // More stable
         }}
       >
-        <color attach="background" args={['#f0f0f0']} />
+        <color attach="background" args={['#f5e5d3']} />
 
         {/* Basic lighting */}
         <ambientLight intensity={0.5} />

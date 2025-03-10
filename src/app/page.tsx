@@ -69,6 +69,8 @@ export default function Home() {
 
           <p className="text-center text-lg italic mt-8 font-light">
             Go ahead—click around, procrastinate a little. I won&apos;t tell your boss.
+            <br />
+            Disclaimer: There&apos;s only 1(one) rickroll in this website.
           </p>
         </div>
       </section>

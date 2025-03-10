@@ -24,21 +24,23 @@ export interface Project {
   tags: string[];
   links?: ProjectLink[];
   featured: boolean;
-  category: 'Game' | 'Software';
+  category: 'Game' | 'Software' | 'Web' | 'Other';
   detailedContent?: DetailedContent[];
+  codeUrl?: string;
+  demoUrl?: string;
 }
 
 const projects: Project[] = [
   {
     id: 1,
-    title: "Master's Thesis: Real-Time Depth Completion for Autonomous Driving",
-    slug: "autonomous-perception",
-    description: "A novel sensor fusion system combining camera and LiDAR data to generate high-fidelity point clouds for autonomous vehicle teleoperation",
-    imageUrl: "/images/thesis.png",
-    tags: ["ROS", "C++", "OpenGL", "PyTorch", "Python", "Autonomous Driving", "Deep Learning"],
+    title: 'Master\'s Thesis: Real-Time Depth Completion for Autonomous Driving',
+    slug: 'thesis',
+    description: 'A novel sensor fusion system combining camera and LiDAR data for generating high-fidelity point clouds for autonomous vehicle teleoperation.',
+    imageUrl: '/images/thesis.png',
+    tags: ['ROS', 'C++', 'OpenGL', 'PyTorch', 'Python', 'Autonomous Driving', 'Deep Learning'],
     links: [
       {
-        url: "https://drive.google.com/file/d/1mphisQ58QPC7HTfegtAK42SZzR_mK0pQ/view",
+        url: "https://drive.google.com/file/d/19yG4nIO64GA3QoWEGyvRjVp0HOlEN_wm/view?usp=drive_link",
         text: "Thesis Paper"
       }
     ],
@@ -47,12 +49,39 @@ const projects: Project[] = [
     detailedContent: [
       {
         type: 'text',
-        content: "The project is using the backbone I developed during the TUM-FTM Teleoperation Interface project. I created a full pipeline to compare different teleoperation interfaces, developede a novel interface for scene reconstroction through point cloud completion, rendering and coloring through lidar and camera streams. More details from the thesis below."
+        content: "My Master's thesis, \"Enhancing a Visualization Concept for Environmental Perception Data of Autonomous Vehicles,\" addresses a critical challenge in autonomous vehicle (AV) technology: creating effective visualization interfaces for teleoperation systems."
+      },
+      {
+        type: 'text',
+        content: "Teleoperation serves as a crucial backup system for autonomous vehicles, allowing human operators to remotely assist when situations exceed the vehicle's autonomous capabilities. My research specifically focuses on Perception Modification (PM), an innovative teleoperation approach where operators can correct perception errors without taking full control of the vehicle. The key contribution is the development and evaluation of an Integrated View interface that combines camera feeds, LiDAR data, and perception outputs in a single, cohesive display."
+      },
+      {
+        type: 'text',
+        content: "To implement this integrated visualization, I developed a deep learning-based depth completion system that creates detailed 3D visualizations from sparse sensor data. The core of this system is a modified Dynamic Spatial Propagation Network (DySPN) architecture that generates dense depth maps from sparse LiDAR inputs and RGB camera images. This approach enables real-time operation essential for teleoperation scenarios while providing a more intuitive spatial understanding of the vehicle's environment."
+      },
+      {
+        type: 'text',
+        content: "For comparative analysis, I also implemented a traditional Separate View interface that presents information across multiple windows. Both interfaces were developed using a user-centered design approach following the W-shaped development cycle, ensuring they met the established requirements for situational awareness, cognitive load management, and technical performance."
+      },
+      {
+        type: 'image',
+        content: "/images/thesis_1.png",
+        caption: "Comparison of the separate view and integrated view interfaces",
+        scalePercent: 100,
+        aspectRatio: "16/5"
+      },
+      {
+        type: 'text',
+        content: "The testing framework utilized a custom simulation environment based on Munich's road layout, with particular focus on the Gärtnerplatz area, creating realistic testing conditions for German operators. Evaluation metrics included the Situation Awareness Global Assessment Technique (SAGAT) for measuring operator awareness and NASA Task Load Index (NASA-TLX) for assessing cognitive workload."
+      },
+      {
+        type: 'text',
+        content: "While the comprehensive user testing was ongoing at the time of thesis completion, initial technical assessments demonstrated the feasibility of real-time depth completion in teleoperation systems. The research establishes a foundation for future interface improvements and contributes to developing more effective teleoperation systems, strengthening the role of human oversight in autonomous vehicle operations."
       },
       {
         type: 'video',
         content: "https://drive.google.com/file/d/1YVv6W0x94HZSgA0Qk0oL3s8NFY6WLwSJ/view",
-        caption: "Demo of the perception system detecting vehicles, pedestrians, and cyclists in various environments"
+        caption: "Performance of the integrated view interface compared to the ground truth"
       }
     ]
   },
@@ -94,7 +123,7 @@ const projects: Project[] = [
     slug: "police-simulator",
     description: "An immersive law enforcement simulation game where players patrol accurately recreated city districts, enforce traffic laws, and investigate crime scenes. Recognized as one of the Top 5 Early Access Games of 2022 by Steam.",
     imageUrl: "/images/police.jpg",
-    tags: ["Unreal Engine 4", "C++", "Game Development", "Simulation", "Professional Work"],
+    tags: ["Unreal Engine 4", "C++"],
     links: [
       {
         url: "https://store.steampowered.com/app/997010/Police_Simulator_Patrol_Officers/",
@@ -135,7 +164,6 @@ const projects: Project[] = [
       }
     ]
   },
-
   {
     id: 5,
     title: "Judgement Day",
@@ -280,7 +308,7 @@ const projects: Project[] = [
     slug: "Exerciser",
     description: "A comprehensive mobile platform that uses computer vision to recognize physical therapy exercises, provide real-time feedback, and facilitate doctor-patient communication for rehabilitation.",
     imageUrl: "/images/exerciser.png",
-    tags: ["Flutter", "Dart", "Python", "Flask", "FastAPI", "MongoDB", "Docker", "Computer Vision", "Pose Estimation"],
+    tags: ["Flutter", "Dart", "Python", "FastAPI", "MongoDB", "Docker"],
     links: [
       {
         url: "https://github.com/FadeoN/exerciser",
@@ -320,14 +348,14 @@ const projects: Project[] = [
     slug: "hyper-casuals",
     description: "A collection of 9 hyper-casual mobile games developed for Apps, optimized for engagement and retention with lightweight, addictive gameplay mechanics.",
     imageUrl: "/images/hyper-casuals.png",
-    tags: ["Mobile Games", "Unity", "C#"],
+    tags: ["Unity", "C#"],
     links: [],
     featured: false,
     category: 'Game',
     detailedContent: [
       {
         type: 'text',
-        content: "During my time working with Apps, I developed numerous hyper-casual mobile games that combined simple mechanics with addictive gameplay loops. These games were designed to be instantly playable with minimal learning curve while maintaining high engagement metrics. The following collection showcases 9 of these projects, each with unique mechanics but sharing the core hyper-casual philosophy of pick-up-and-play simplicity."
+        content: "During my time working with Apps, I developed numerous hyper-casual mobile games that combined simple mechanics with addictive gameplay loops. These games were designed to be instantly playable with minimal learning curve while maintaining high engagement metrics."
       },
       {
         type: 'video',
@@ -336,7 +364,6 @@ const projects: Project[] = [
         scalePercent: 75,
         aspectRatio: "16/9"
       },
-
       {
         type: 'video',
         content: "https://drive.google.com/file/d/1lApJjVZcxgxsGJLstecfsBAtKA_szRXm/view?usp=drive_link",

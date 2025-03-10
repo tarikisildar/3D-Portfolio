@@ -582,6 +582,8 @@ function VideoScreen({ active, onChangeVideo }: { active: boolean, onChangeVideo
     const videoSources = [
       '/videos/hoffman.mp4',
       '/videos/office.mp4',
+      '/videos/shorts.mp4',
+      '/videos/radiohead.mp4',
     ];
     const randomIndex = Math.floor(Math.random() * videoSources.length);
 

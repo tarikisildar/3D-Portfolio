@@ -177,7 +177,10 @@ export default function About() {
                         className="w-16 h-16 text-white"
                       />
                     </div>
-                    <span className="text-foreground/80 group-hover:text-foreground">Duolingo</span>
+                    <span className="text-foreground/80 group-hover:text-foreground text-center">
+                      Duolingo<br/>
+                      why not
+                    </span>
                   </a>
 
                   {/* Microsoft Teams (Rickroll) */}
