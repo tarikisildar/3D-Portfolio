@@ -1,64 +1,32 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Loader, OrbitControls } from '@react-three/drei'
+import { Loader } from '@react-three/drei'
 
 // Import the RoomScene component as a normal import to avoid re-mounting
-const RoomScene = dynamic(
-  () => import('./RoomScene').then(mod => ({ default: mod.RoomScene })),
-  { ssr: false }
-)
+import { RoomScene } from './RoomScene'
 
-// Define page types that match RoomScene's expected types
-type PageType = 'home' | 'about' | 'projects' | 'cv' | 'blog' | 'notFound'
+// Map paths to page types to handle route changes
+type PageType = 'home' | 'about' | 'projects' | 'cv' | 'blog' | 'notFound' | 'procrastinate'
 
-// Map routes to page types
-const routeToPage: Record<string, PageType> = {
-  '/': 'home',
-  '/about': 'about',
-  '/projects': 'projects',
-  '/cv': 'cv',
-  '/blog': 'blog'
+// Map paths to page types
+const getPageTypeFromPath = (path: string): PageType => {
+  if (path === '/') return 'home'
+  if (path.startsWith('/about')) return 'about'
+  if (path.startsWith('/projects')) return 'projects'
+  if (path.startsWith('/cv')) return 'cv'
+  if (path.startsWith('/blog')) return 'blog'
+  return 'notFound'
 }
 
-// Helper function to determine page type from pathname
-const getPageTypeFromPath = (path: string): PageType => {
-  // Exact route match
-  if (routeToPage[path]) {
-    return routeToPage[path];
-  }
-  // Check if path starts with /blog/ (for blog posts)
-  else if (path.startsWith('/blog/')) {
-    return 'blog';
-  }
-  // Fallback
-  else {
-    return 'notFound';
-  }
-};
-
-// Keep rendering for a few seconds to ensure animations complete
+// Helper component to ensure we render frames even when "nothing" is happening
+// This is important for smooth animation transitions
 function ForceRender() {
-  const frameCount = useRef(0)
-  const maxFrames = 180 // About 3 seconds at 60fps
-
   useFrame(() => {
-    if (frameCount.current < maxFrames) {
-      frameCount.current++
-
-      // Log progress periodically
-      if (frameCount.current === 1 ||
-          frameCount.current === 60 ||
-          frameCount.current === 120 ||
-          frameCount.current === maxFrames) {
-        console.log(`ForceRender: Frame ${frameCount.current}/${maxFrames}`)
-      }
-    }
+    // This empty useFrame hook forces rendering
   })
-
   return null
 }
 
@@ -67,8 +35,6 @@ export default function Scene3D() {
   // Initialize with the correct page type based on current path
   const [currentPage, setCurrentPage] = useState<PageType>(getPageTypeFromPath(pathname))
   const previousPathRef = useRef(pathname)
-  // Add debug mode state
-  const [debugMode, setDebugMode] = useState(false)
 
   // IMPORTANT: Don't use a key on the Canvas to prevent complete re-creation
   // This ensures the camera animation works
@@ -91,26 +57,6 @@ export default function Scene3D() {
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      {/* Debug mode toggle button */}
-      <button
-        onClick={() => setDebugMode(!debugMode)}
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 1000,
-          padding: '8px 12px',
-          backgroundColor: debugMode ? '#ff5555' : '#555555',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        {debugMode ? 'Exit Debug Mode' : 'Debug Mode'}
-      </button>
-
       {/* CRITICAL: No key prop here - we want the Canvas to persist between route changes */}
       <Canvas
         shadows
@@ -140,9 +86,7 @@ export default function Scene3D() {
 
         {/* Pass currentPage to RoomScene - this will trigger animation */}
         <Suspense fallback={null}>
-          <RoomScene page={currentPage} debugMode={debugMode} />
-          {/* Add OrbitControls when in debug mode */}
-          {debugMode && <OrbitControls />}
+          <RoomScene page={currentPage} />
         </Suspense>
       </Canvas>
 
