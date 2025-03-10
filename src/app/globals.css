@@ -84,3 +84,284 @@ canvas {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-dark);
 }
+
+/* Animation for expanded project cards */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+/* Project card animations */
+.project-card-expanded {
+  transition: all 0.3s ease-in-out;
+}
+
+.project-card-closing {
+  transition: all 0.3s ease-in-out;
+}
+
+.expanded-content {
+  transition: all 0.3s ease-in-out;
+}
+
+.expanded-image-content {
+  transition: all 0.3s ease-in-out;
+  animation: slideInRight 0.3s ease-in-out;
+}
+
+/* Animation for card image fade out when expanding */
+.card-image-fadeout {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Expanded card transitions */
+.expanded-card {
+  transition: all 0.4s ease-in-out;
+}
+
+/* Animation for floating image that jumps out to the side */
+.floating-image-enter {
+  animation: floatIn 0.5s ease-in-out forwards;
+}
+
+.floating-image-exit {
+  animation: floatOut 0.5s ease-in-out forwards;
+}
+
+@keyframes floatIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30%);
+  }
+}
+
+/* Slide animations for expanded content */
+.animate-slideOutRight {
+  animation: slideOutRight 0.3s ease-in-out forwards;
+}
+.animate-slideInLeft {
+  animation: slideOutRight 0.3s ease-in-out backwards;
+}
+
+/* Expanded image animation */
+.expanded-image-container {
+  animation: popOutFromCard 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  transform-origin: left center;
+}
+
+.expanded-image-container.closing {
+  animation: popBackIntoCard 0.4s cubic-bezier(0.18, 0.25, 0.32, 1.28) forwards;
+}
+
+@keyframes popOutFromCard {
+  0% {
+    opacity: 0.5;
+    transform: translateX(-50px) scale(0.6);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translateX(10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@keyframes popBackIntoCard {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    opacity: 0.5;
+    transform: translateX(-350px) translateY(-100px) scale(0.6);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+/* Animation for expanded image in details section */
+.expanded-image {
+  position: relative;
+  animation: popIn 0.4s ease-in-out;
+  transform-origin: center;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  50% {
+    transform: scale(1.05) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Project card image pop-out animation - NEW */
+.pop-out-image {
+  animation: cardImagePopOut 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  transform-origin: left center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.pop-out-image.closing {
+  animation: cardImagePopIn 0.4s cubic-bezier(0.47, 0, 0.75, 0.72) forwards;
+}
+
+@keyframes cardImagePopOut {
+  0% {
+    opacity: 0.5;
+    transform: translateX(-50px) scale(0.6);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translateX(10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes cardImagePopIn {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.6);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+/* Direct card-to-expanded image animation - FIXED LEFT ORIGIN */
+@keyframes growFromOrigin {
+  0% {
+    opacity: 0.5;
+    transform: translateX(-100%) scale(0.5);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translateX(-30%) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.shrink-animation {
+  animation: shrinkBackToCard 0.3s ease-in forwards !important;
+}
+
+@keyframes shrinkBackToCard {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%) scale(0.5);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+/* Fade animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}

@@ -1,12 +1,27 @@
 'use client'
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ProjectCard from "@/components/ui/ProjectCard";
 import projects from "@/data/projects";
+import Image from "next/image";
 
 export default function Home() {
+  const router = useRouter();
+
   // Filter featured projects
   const featuredProjects = projects.filter((project) => project.featured);
+
+  // Handle project expansion by navigating to the projects page
+  const handleProjectExpand = (projectId: number | null) => {
+    if (projectId) {
+      // Navigate to the projects page with the specific project slug
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        router.push(`/projects?project=${project.slug}`);
+      }
+    }
+  };
 
   return (
     <>
@@ -74,6 +89,8 @@ export default function Home() {
               <ProjectCard
                 key={project.id}
                 project={project}
+                isExpanded={false}
+                onExpand={handleProjectExpand}
               />
             ))}
           </div>
@@ -111,10 +128,14 @@ export default function Home() {
 
             <div className="order-1 md:order-2 relative">
               <div className="aspect-square rounded-lg overflow-hidden relative bg-foreground/10">
-                {/* Replace with your actual image */}
-                <div className="absolute inset-0 flex items-center justify-center text-foreground/20 text-2xl">
-                  [Your Photo Here]
-                </div>
+                {/* Personal photo */}
+                <Image
+                  src="/images/tarik/me.jpg"
+                  alt="Profile photo"
+                  fill
+                  className="object-cover"
+                  priority
+                />
               </div>
             </div>
           </div>
