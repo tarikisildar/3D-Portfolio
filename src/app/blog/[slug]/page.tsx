@@ -15,15 +15,17 @@ export async function generateStaticParams() {
 // Set dynamic rendering to ensure we always get the latest content
 export const dynamic = 'force-dynamic'
 
-// Fix the component props type to work with both local and Vercel builds
-type PageProps = {
-  params: {
-    slug: string;
-  };
-}
+// Remove the custom type and use a more compatible approach
+export default async function BlogPost({
+  params,
+}: {
+  params: { slug: string } | Promise<{ slug: string }>
+}) {
+  // Ensure params is resolved properly
+  const resolvedParams =
+    params instanceof Promise ? await params : params;
 
-export default async function BlogPost({ params }: PageProps) {
-  const { slug } = params
+  const { slug } = resolvedParams;
 
   const post = await getBlogPostBySlug(slug)
 

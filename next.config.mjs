@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   // Disable error overlay in production
   onDemandEntries: {
     // Keep pages in memory for longer
@@ -11,8 +10,7 @@ const nextConfig = {
   },
   // Add this to disable the error overlay
   devIndicators: {
-    buildActivity: true,
-    buildActivityPosition: 'bottom-right',
+    position: 'bottom-right',
   },
 };
 
