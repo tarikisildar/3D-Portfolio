@@ -542,107 +542,110 @@ function ProcrastinateButtons({
 // Video Screen component that renders content on the computer screen when in procrastinate mode
 function VideoScreen({ active, onChangeVideo }: { active: boolean, onChangeVideo: () => void }) {
   const [videoTexture, setVideoTexture] = useState<THREE.Texture | null>(null);
-  // Add a ref to track if we've successfully loaded a texture
-  const textureLoadedRef = useRef(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // List of fun videos/GIFs to show (these could be hosted assets or embedded videos)
-  const videoSources = [
-    '/videos/hoffman.mp4',
-    '/videos/office.mp4',
-  ];
-
-  // Create a fallback for videos not found
-  const createFallbackTexture = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 384;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      // Create a gradient background
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#333333');
-      gradient.addColorStop(1, '#111111');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Add text
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '20px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('Procrastinating...', canvas.width / 2, canvas.height / 2);
-      ctx.fillText('(Video assets not found)', canvas.width / 2, canvas.height / 2 + 30);
-    }
-    return new THREE.CanvasTexture(canvas);
-  };
-
-  // Load a random video when activated
+  // Create a video element that will be reused
   useEffect(() => {
-    if (!active) return;
+    // Create the video element once
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.loop = true;
+    // Start muted to avoid autoplay restrictions
+    video.muted = true;
+    video.volume = 0;
+    // Store reference for cleanup
+    videoRef.current = video;
 
-    // Reset texture loaded flag
-    textureLoadedRef.current = false;
-
-    // Choose a random video
-    const randomIndex = Math.floor(Math.random() * videoSources.length);
-
-    try {
-      // Try to load the video as a texture
-      const video = document.createElement('video');
-      video.src = videoSources[randomIndex];
-      video.crossOrigin = 'anonymous';
-      video.loop = true;
-      video.muted = true;
-
-      // Set up event listeners for the video
-      video.addEventListener('loadeddata', () => {
-        console.log('Video loaded successfully');
-        textureLoadedRef.current = true;
-      });
-
-      video.addEventListener('error', () => {
-        console.error('Video loading error');
-        if (!textureLoadedRef.current) {
-          setVideoTexture(createFallbackTexture());
-        }
-      });
-
-      // Start playing the video
-      video.play().catch(err => {
-        console.error('Error playing video:', err);
-      });
-
-      const texture = new THREE.VideoTexture(video);
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.format = THREE.RGBAFormat;
-
-      setVideoTexture(texture);
-      // Mark as loaded since we're setting the texture
-      textureLoadedRef.current = true;
-    } catch (error) {
-      console.error('Error creating video texture:', error);
-      setVideoTexture(createFallbackTexture());
+    // Load a video
+    if (active) {
+      loadVideo(video);
     }
 
-    // If video loading fails, use the fallback
-    const timeout = setTimeout(() => {
-      // Only show the fallback if no texture has been successfully loaded
-      if (!textureLoadedRef.current) {
-        console.log('Using fallback texture due to video load timeout');
-        setVideoTexture(createFallbackTexture());
-      }
-    }, 4000);
-
+    // Cleanup on unmount
     return () => {
-      clearTimeout(timeout);
-      // Clean up video element when component unmounts
-      if (videoTexture && 'image' in videoTexture && videoTexture.image instanceof HTMLVideoElement) {
-        videoTexture.image.pause();
-        videoTexture.image.src = '';
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+        videoRef.current.load();
+        videoRef.current = null;
+      }
+      if (videoTexture) {
         videoTexture.dispose();
+        setVideoTexture(null);
       }
     };
-  }, [active, onChangeVideo]);
+  }, []); // Only run once on mount
+
+  // Function to load a video into the video element
+  const loadVideo = useCallback((videoElement: HTMLVideoElement) => {
+    // Choose a random video
+    const videoSources = [
+      '/videos/hoffman.mp4',
+      '/videos/office.mp4',
+    ];
+    const randomIndex = Math.floor(Math.random() * videoSources.length);
+
+    // Set source and play
+    videoElement.src = videoSources[randomIndex];
+
+    // Create and set texture
+    const texture = new THREE.VideoTexture(videoElement);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.format = THREE.RGBAFormat;
+
+    setVideoTexture(texture);
+
+    // Play the video (with muted for autoplay policy)
+    videoElement.play().catch(err => {
+      console.error('Error playing video:', err);
+    });
+
+    // After a short delay, try unmuting
+    setTimeout(() => {
+      try {
+        videoElement.muted = false;
+        videoElement.volume = 0.5;
+      } catch (error) {
+        console.log('Could not unmute video:', error);
+      }
+    }, 1000);
+  }, []);
+
+  // Handle active state changes
+  useEffect(() => {
+    if (videoRef.current) {
+      if (active) {
+        loadVideo(videoRef.current);
+      } else {
+        // Pause and reset when not active
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+        videoRef.current.muted = true;
+        videoRef.current.volume = 0;
+      }
+    }
+  }, [active, loadVideo]);
+
+  // Handle video change
+  useEffect(() => {
+    const handleChange = () => {
+      if (active && videoRef.current) {
+        // Pause current video
+        videoRef.current.pause();
+        // Load a new one
+        loadVideo(videoRef.current);
+      }
+    };
+
+    // This is a hack to access the latest onChangeVideo function
+    // We create an object that will be stable across renders
+    const ref = { current: handleChange };
+
+    // Call the handler whenever onChangeVideo changes
+    ref.current();
+
+  }, [active, onChangeVideo, loadVideo]);
 
   // If not active or no texture, don't render
   if (!active || !videoTexture) return null;

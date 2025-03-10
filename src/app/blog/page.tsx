@@ -1,60 +1,21 @@
-'use client'
-
 import Link from 'next/link'
+import { getAllBlogPosts } from '@/utils/mdUtils'
 
-export default function Blog() {
-  // Placeholder blog posts
-  const blogPosts = [
-    {
-      id: 1,
-      title: 'Optimizing Render Performance in OpenGL',
-      excerpt: 'Learn how to optimize your rendering pipeline for better performance in real-time graphics applications.',
-      date: 'May 15, 2023',
-      readTime: '8 min read',
-      category: 'Computer Graphics'
-    },
-    {
-      id: 2,
-      title: 'Introduction to SLAM for Autonomous Robots',
-      excerpt: 'An overview of Simultaneous Localization and Mapping (SLAM) algorithms for autonomous navigation.',
-      date: 'April 3, 2023',
-      readTime: '10 min read',
-      category: 'Robotics'
-    },
-    {
-      id: 3,
-      title: 'Building Realistic Physical Materials with PBR',
-      excerpt: 'Dive into Physically Based Rendering (PBR) techniques to create realistic materials for 3D assets.',
-      date: 'March 22, 2023',
-      readTime: '12 min read',
-      category: 'Computer Graphics'
-    },
-    {
-      id: 4,
-      title: 'Sensor Fusion for Autonomous Vehicles',
-      excerpt: 'How to combine data from multiple sensors to create a coherent understanding of the environment.',
-      date: 'February 10, 2023',
-      readTime: '9 min read',
-      category: 'Robotics'
-    },
-    {
-      id: 5,
-      title: 'Implementing Ray Tracing on the GPU',
-      excerpt: 'A step-by-step guide to implementing real-time ray tracing on modern GPUs.',
-      date: 'January 5, 2023',
-      readTime: '15 min read',
-      category: 'Computer Graphics'
-    }
-  ]
+// Make this server component to read files
+export const dynamic = 'force-dynamic'
+
+export default async function Blog() {
+  // Get blog posts from markdown files
+  const blogPosts = await getAllBlogPosts()
 
   return (
     <main className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Page Heading */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold mb-4">Blog</h1>
+          <h1 className="text-4xl font-bold mb-4">My Blog</h1>
           <p className="text-foreground/70 max-w-3xl mx-auto">
-            Thoughts, ideas, and insights on computer graphics, robotics, and beyond.
+            A personal journal of experiences, thoughts, and occasional technical insights. Posts are coming soon, or not very soon. I don&apos;t really know.
           </p>
         </div>
 
@@ -62,7 +23,7 @@ export default function Blog() {
         <div className="space-y-12">
           {blogPosts.map((post) => (
             <article
-              key={post.id}
+              key={post.slug}
               className="border-b border-foreground/10 pb-12 last:border-b-0 last:pb-0"
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
@@ -75,7 +36,7 @@ export default function Blog() {
               </div>
 
               <h2 className="text-2xl font-bold mb-3">
-                <Link href={`/blog/${post.id}`} className="hover:text-primary transition-colors">
+                <Link href={`/blog/${post.slug}`} className="hover:text-primary transition-colors">
                   {post.title}
                 </Link>
               </h2>
@@ -85,7 +46,7 @@ export default function Blog() {
               </p>
 
               <Link
-                href={`/blog/${post.id}`}
+                href={`/blog/${post.slug}`}
                 className="text-primary hover:text-primary-dark font-medium inline-flex items-center transition-colors"
               >
                 Read More

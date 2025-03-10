@@ -24,6 +24,22 @@ const routeToPage: Record<string, PageType> = {
   '/blog': 'blog'
 }
 
+// Helper function to determine page type from pathname
+const getPageTypeFromPath = (path: string): PageType => {
+  // Exact route match
+  if (routeToPage[path]) {
+    return routeToPage[path];
+  }
+  // Check if path starts with /blog/ (for blog posts)
+  else if (path.startsWith('/blog/')) {
+    return 'blog';
+  }
+  // Fallback
+  else {
+    return 'notFound';
+  }
+};
+
 // Keep rendering for a few seconds to ensure animations complete
 function ForceRender() {
   const frameCount = useRef(0)
@@ -48,7 +64,8 @@ function ForceRender() {
 
 export default function Scene3D() {
   const pathname = usePathname()
-  const [currentPage, setCurrentPage] = useState<PageType>('home')
+  // Initialize with the correct page type based on current path
+  const [currentPage, setCurrentPage] = useState<PageType>(getPageTypeFromPath(pathname))
   const previousPathRef = useRef(pathname)
   // Add debug mode state
   const [debugMode, setDebugMode] = useState(false)
@@ -65,7 +82,7 @@ export default function Scene3D() {
       previousPathRef.current = pathname
 
       // Get the page type for the new path
-      const newPage = routeToPage[pathname] || 'notFound'
+      const newPage = getPageTypeFromPath(pathname)
 
       console.log(`Scene3D: Updating to page type: ${newPage}`)
       setCurrentPage(newPage)

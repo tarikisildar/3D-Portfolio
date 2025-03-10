@@ -53,7 +53,7 @@ export default function Hero() {
 
         <div className="mt-16 p-4 max-w-2xl mx-auto bg-foreground/5 backdrop-blur-sm rounded-lg">
           <p className="text-foreground/80 italic">
-            &ldquo;When I&apos;m not immersed in algorithms or optimizing GPU performance, you&apos;ll find me enjoying photography with a retro aesthetic, exploring music from vinyl records to cassettes, hunting for the perfect coffee brew, or appreciating vintage-inspired design and art.&rdquo;
+            &ldquo;When I&apos;m not immersed in algorithms or optimizing GPU performance, you&apos;ll find me enjoying photography with a retro aesthetic, exploring music from vinyl records to cassettes, hunting for the perfect coffee brew, or benching. I bench 100 kilos suiii. &rdquo;
           </p>
         </div>
 

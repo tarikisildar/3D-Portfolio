@@ -38,7 +38,7 @@ const aboutData: AboutData = {
     "I'm a Computer Graphics and Robotics specialist with an M.Sc. from the Technical University of Munich, where I've focused on real-time rendering, autonomous systems, and AI-powered solutions.",
     "Over the years, I've worked on exciting projects ranging from autonomous vehicle systems to real-time visualization tools, blending technical expertise with creativity to solve complex challenges.",
     "My expertise spans multiple domains including real-time rendering, physics simulation, computer vision, and robotic motion planning. I'm particularly passionate about creating visually stunning and technically impressive applications that push the boundaries of what's possible.",
-    "When I'm not immersed in algorithms or optimizing GPU performance, you'll find me enjoying photography with a retro aesthetic, exploring music from vinyl records to cassettes, hunting for the perfect coffee brew, or appreciating vintage-inspired design and art."
+    "When I'm not immersed in algorithms or optimizing GPU performance, you'll find me enjoying photography with a retro aesthetic, exploring music from vinyl records to cassettes, hunting for the perfect coffee brew, or benching. I bench 100 kilos suiii."
   ],
   skills: [
     { name: "OpenGL/Vulkan", level: 9, category: "graphics" },

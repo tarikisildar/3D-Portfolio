@@ -34,9 +34,9 @@ const cameraPositions = {
     fov: 25
   },
   notFound: {
-    position: [0, 1, -3], // Looking at an empty area or something unusual
-    target: [0, 0, -4],
-    fov: 35
+    position: [2, 1.5, -2], // Looking at the bookshelf
+    target: [1, 1, -3],
+    fov: 25
   }
 }
 
