@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Add basePath for serving from a subdirectory
+  basePath: '/new',
   // Disable error overlay in production
   onDemandEntries: {
     // Keep pages in memory for longer
