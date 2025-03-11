@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProjectCard from '@/components/ui/ProjectCard'
 import projects from '@/data/projects'
 
-export default function Projects() {
+// Create a client component that uses useSearchParams
+function ProjectsWithParams() {
   const searchParams = useSearchParams()
   const [selectedTag, setSelectedTag] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<'All' | 'Game' | 'Software'>('All')
@@ -249,14 +250,36 @@ export default function Projects() {
           {/* No Results Message */}
           {filteredProjects.length === 0 && (
             <div className="text-center py-12">
-              <h3 className="text-xl font-medium mb-2">No projects found</h3>
-              <p className="text-foreground/70">
-                No projects match the selected filter. Please try a different filter or category.
-              </p>
+              <h3 className="text-xl font-semibold text-foreground/70">No projects found</h3>
+              <p className="text-foreground/50 mt-2">Try changing your filter criteria</p>
             </div>
           )}
         </div>
       </div>
     </main>
-  )
+  );
+}
+
+// Add a loading component
+function ProjectsLoading() {
+  return (
+    <main className="py-20 px-4">
+      <div className="max-w-7xl mx-auto text-center">
+        <h1 className="text-4xl font-bold mb-4">My Projects</h1>
+        <p className="text-foreground/70 max-w-3xl mx-auto mb-8">
+          Loading projects...
+        </p>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto"></div>
+      </div>
+    </main>
+  );
+}
+
+// Main Projects component that wraps ProjectsWithParams in a Suspense boundary
+export default function Projects() {
+  return (
+    <Suspense fallback={<ProjectsLoading />}>
+      <ProjectsWithParams />
+    </Suspense>
+  );
 }
