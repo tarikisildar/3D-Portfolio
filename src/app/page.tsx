@@ -5,9 +5,14 @@ import { useRouter } from "next/navigation";
 import ProjectCard from "@/components/ui/ProjectCard";
 import projects from "@/data/projects";
 import Image from "next/image";
+import { useEffect, useRef } from "react";
+
+// Define the page types for random navigation
+const pageTabs = ['about', 'projects', 'cv', 'blog'];
 
 export default function Home() {
   const router = useRouter();
+  const procrastinateButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Filter featured projects
   const featuredProjects = projects.filter((project) => project.featured);
@@ -23,6 +28,70 @@ export default function Home() {
     }
   };
 
+  // Find the procrastinate button on mount with retries
+  useEffect(() => {
+    // Function to find the button in the DOM
+    const findButton = () => {
+      const button = document.querySelector('button[style*="background-color: rgb(255, 107, 107)"]') as HTMLButtonElement;
+      if (button) {
+        procrastinateButtonRef.current = button;
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediately
+    if (findButton()) return;
+
+    // Set up intervals to keep trying
+    const interval = setInterval(() => {
+      if (findButton()) {
+        clearInterval(interval);
+      }
+    }, 500); // Check every 500ms
+
+    // Cleanup
+    return () => clearInterval(interval);
+  }, []);
+
+  // Function to navigate to a random tab
+  const navigateToRandomTab = () => {
+    const randomTab = pageTabs[Math.floor(Math.random() * pageTabs.length)];
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    router.push(`/${randomTab}`);
+  };
+
+  // Function to trigger procrastination mode
+  const triggerProcrastinate = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Try to find and click the procrastinate button
+    const clickProcrastinateButton = () => {
+      // First check if we already have a reference
+      if (procrastinateButtonRef.current) {
+        procrastinateButtonRef.current.click();
+        return;
+      }
+
+      // Otherwise try to find it again
+      const button = document.querySelector('button[style*="background-color: rgb(255, 107, 107)"]') as HTMLButtonElement;
+      if (button) {
+        procrastinateButtonRef.current = button;
+        button.click();
+      } else {
+        // If button not found, try again after a short delay
+        setTimeout(clickProcrastinateButton, 200);
+      }
+    };
+
+    clickProcrastinateButton();
+  };
+
+  // Function to scroll to top
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       {/* Intro Section */}
@@ -36,7 +105,10 @@ export default function Home() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl">
+            <div
+              className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer"
+              onClick={scrollToTop}
+            >
               <div className="flex items-center mb-4">
                 <span className="text-3xl mr-3">🏠</span>
                 <h3 className="text-xl font-semibold">My Virtual Room</h3>
@@ -46,7 +118,10 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl">
+            <div
+              className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer"
+              onClick={navigateToRandomTab}
+            >
               <div className="flex items-center mb-4">
                 <span className="text-3xl mr-3">🧭</span>
                 <h3 className="text-xl font-semibold">Take a Tour</h3>
@@ -56,13 +131,16 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl md:col-span-2">
+            <div
+              className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl md:col-span-2 cursor-pointer"
+              onClick={triggerProcrastinate}
+            >
               <div className="flex items-center mb-4">
                 <span className="text-3xl mr-3">💻</span>
                 <h3 className="text-xl font-semibold">Procrastinate</h3>
               </div>
               <p className="text-foreground/80">
-                Feeling unproductive? Hit the <span className="font-mono px-2 py-1 rounded bg-red-500/10 text-red-500 font-semibold">Procrastinate</span> button in the 3D view to see exactly what I do instead of working. You might feel better about your own productivity habits!
+                Feeling unproductive? Click this card or hit the <span className="font-mono px-2 py-1 rounded bg-red-500/10 text-red-500 font-semibold">Procrastinate</span> button in the 3D view to see exactly what I do instead of working. You might feel better about your own productivity habits!
               </p>
             </div>
           </div>
