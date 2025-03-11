@@ -252,7 +252,6 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
     }
 
     if (lastPage !== page) {
-      console.log(`Camera: STARTING ANIMATION from ${lastPage} to ${page}`);
 
       // Start animation
       setAnimating(true);
@@ -314,11 +313,6 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
         const t = Math.min(1, elapsed / DURATION);
         const smoothT = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-        // Every 5% of progress, log a message
-        const progress = Math.floor(smoothT * 100);
-        if (progress % 5 === 0 && Math.random() < 0.2) {
-          console.log(`Camera animation progress: ${progress}%`);
-        }
 
         // Interpolate position
         cameraRef.current.position.lerpVectors(
@@ -732,7 +726,7 @@ export function RoomScene({ page, debugMode = false }: RoomSceneProps) {
         <SimpleRoomReplacement />
       )}
 
-      <ambientLight intensity={0.7} />
+      <ambientLight intensity={1} />
 
       <VideoScreen
         active={procrastinateMode}

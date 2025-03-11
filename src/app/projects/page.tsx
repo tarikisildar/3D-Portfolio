@@ -141,7 +141,8 @@ function ProjectsWithParams() {
     border: 'none',
     cursor: 'pointer',
     position: 'relative' as const,
-    color: 'rgba(0, 0, 0, 0.6)',
+    color: 'var(--foreground)',
+    opacity: 0.6,
     transition: 'color 0.3s ease',
   };
 

@@ -42,7 +42,6 @@ export default function Scene3D() {
   // Update the page based on route changes
   useEffect(() => {
     if (previousPathRef.current !== pathname) {
-      console.log(`Scene3D: 🔄 Route changed from ${previousPathRef.current} to ${pathname}`)
 
       // Store the new path
       previousPathRef.current = pathname
@@ -50,7 +49,6 @@ export default function Scene3D() {
       // Get the page type for the new path
       const newPage = getPageTypeFromPath(pathname)
 
-      console.log(`Scene3D: Updating to page type: ${newPage}`)
       setCurrentPage(newPage)
     }
   }, [pathname])
@@ -76,7 +74,7 @@ export default function Scene3D() {
         <directionalLight
           castShadow
           position={[10, 10, 5]}
-          intensity={1}
+          intensity={1.7}
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
