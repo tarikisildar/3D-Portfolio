@@ -15,7 +15,7 @@ const cameraPositions = {
     fov: 35
   },
   about: {
-    position: [0.79,-0.7,-1.28] as [number, number, number],
+    position: [0.79,-0.7,-1.68] as [number, number, number],
     target: [8.02,-0.87,5.63] as [number, number, number],
     fov: 40
   },

@@ -4,23 +4,33 @@ import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Project, DetailedContent } from '@/data/projects'
 
-// Extract the file ID from the Google Drive URL
+// Extract Google Drive file ID from URL
 const extractGoogleDriveFileId = (url: string): string | null => {
-  // Match patterns like /file/d/FILE_ID/ or id=FILE_ID or /open?id=FILE_ID
-  const patterns = [
-    /\/file\/d\/([^\/]+)/,  // /file/d/FILE_ID/
-    /id=([^&]+)/,           // id=FILE_ID
-    /\/open\?id=([^&]+)/    // /open?id=FILE_ID
-  ];
+  const match = url.match(/(?:drive\.google\.com\/file\/d\/|id=|open\?id=)([a-zA-Z0-9_-]+)/)
+  return match ? match[1] : null
+}
 
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
+// Custom hook to detect if screen is mobile sized
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
 
-  return null;
+  useEffect(() => {
+    // Initial check
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Set on mount
+    checkIfMobile();
+
+    // Add resize listener
+    window.addEventListener('resize', checkIfMobile);
+
+    // Clean up
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  return isMobile;
 };
 
 interface ProjectCardProps {
@@ -36,6 +46,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const cardImageRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Track the card position for animation
   useEffect(() => {
@@ -156,11 +167,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       case 'video':
         if (isYouTubeUrl(content.content)) {
           const embedUrl = getYouTubeEmbedUrl(content.content);
-
-          // Create a container with the specified scale if provided
-          const containerStyle: React.CSSProperties = content.scalePercent
-            ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-            : { width: '100%' };
+          const containerStyle: React.CSSProperties = isMobile
+            ? { width: '100%' }
+            : content.scalePercent
+              ? { width: `${content.scalePercent}%`, margin: '0 auto' }
+              : { width: '100%' };
 
           return (
             <div style={containerStyle} className="mb-4">
@@ -180,9 +191,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           const fileId = extractGoogleDriveFileId(content.content);
           if (fileId) {
             const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-            const containerStyle: React.CSSProperties = content.scalePercent
-              ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-              : { width: '100%' };
+
+            // Calculate container style based on mobile status
+            const containerStyle: React.CSSProperties = isMobile
+              ? { width: '100%' }
+              : content.scalePercent
+                ? { width: `${content.scalePercent}%`, margin: '0 auto' }
+                : { width: '100%' };
 
             return (
               <div style={containerStyle} className="mb-4">
@@ -199,9 +214,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         }
 
         // Default video embed
-        const videoContainerStyle: React.CSSProperties = content.scalePercent
-          ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-          : { width: '100%' };
+        // Calculate container style based on mobile status
+        const videoContainerStyle: React.CSSProperties = isMobile
+          ? { width: '100%' }
+          : content.scalePercent
+            ? { width: `${content.scalePercent}%`, margin: '0 auto' }
+            : { width: '100%' };
 
         return (
           <div style={videoContainerStyle} className="mb-4">
@@ -215,10 +233,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
         )
       case 'image':
-        const imageContainerStyle: React.CSSProperties = content.scalePercent
-          ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-          : { width: '100%' };
-
+        // Calculate container style based on mobile status
+        const imageContainerStyle: React.CSSProperties = isMobile
+          ? { width: '100%' }
+          : {width:'100%' }
         // Create a style object for the image container with the aspect ratio
         const imageStyle: React.CSSProperties = {
           position: 'relative',
@@ -235,53 +253,65 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 fill
                 className="object-contain rounded-lg"
               />
-              {content.caption && (
-                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                  {content.caption}
-                </div>
-              )}
+
             </div>
           </div>
         )
       case 'pdf':
+        // Check if it's a Google Drive link
         if (isGoogleDriveUrl(content.content)) {
           const fileId = extractGoogleDriveFileId(content.content);
           if (fileId) {
             const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-            const pdfContainerStyle: React.CSSProperties = content.scalePercent
-              ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-              : { width: '100%' };
+
+            // Calculate container style based on mobile status
+            const pdfContainerStyle: React.CSSProperties = isMobile
+              ? { width: '100%' }
+              : content.scalePercent
+                ? { width: `${content.scalePercent}%`, margin: '0 auto' }
+                : { width: '100%' };
 
             return (
               <div style={pdfContainerStyle} className="mb-4">
                 <iframe
-                  className="w-full h-[500px] rounded-lg overflow-hidden"
                   src={embedUrl}
-                  title="Google Drive PDF"
-                  allowFullScreen
+                  className="w-full h-[500px] rounded-lg"
+                  title={content.caption || 'PDF document'}
                 ></iframe>
+                {content.caption && (
+                  <p className="text-sm text-foreground/60 text-center mt-2">{content.caption}</p>
+                )}
               </div>
-            );
+            )
           }
         }
 
-        const defaultPdfContainerStyle: React.CSSProperties = content.scalePercent
-          ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-          : { width: '100%' };
+        // Calculate container style based on mobile status
+        const defaultPdfContainerStyle: React.CSSProperties = isMobile
+          ? { width: '100%' }
+          : content.scalePercent
+            ? { width: `${content.scalePercent}%`, margin: '0 auto' }
+            : { width: '100%' };
 
         return (
           <div style={defaultPdfContainerStyle} className="mb-4">
-            <iframe
-              className="w-full h-[500px] rounded-lg"
+            <embed
               src={content.content}
-              title="PDF content"
-            ></iframe>
+              type="application/pdf"
+              className="w-full h-[500px] rounded-lg"
+            />
+            {content.caption && (
+              <p className="text-sm text-foreground/60 text-center mt-2">{content.caption}</p>
+            )}
           </div>
         )
       case 'web':
-        const webContainerStyle: React.CSSProperties = content.scalePercent
-          ? { width: `${content.scalePercent}%`, margin: '0 auto' }
-          : { width: '100%' };
+        // Calculate container style based on mobile status
+        const webContainerStyle: React.CSSProperties = isMobile
+          ? { width: '100%' }
+          : content.scalePercent
+            ? { width: `${content.scalePercent}%`, margin: '0 auto' }
+            : { width: '100%' };
 
         return (
           <div style={webContainerStyle} className="mb-4">

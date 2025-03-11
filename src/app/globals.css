@@ -365,3 +365,122 @@ canvas {
     transform: translateY(-10px);
   }
 }
+
+/* Mobile responsive design for content containers */
+@media (max-width: 767px) {
+  /* All content gets full width on mobile */
+  .use-mobile-width {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* Desktop scales - explicit percentages */
+@media (min-width: 768px) {
+  .desktop-scale-100 {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-95 {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-90 {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-85 {
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-80 {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-75 {
+    width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-70 {
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-65 {
+    width: 65%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-60 {
+    width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-55 {
+    width: 55%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-50 {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-45 {
+    width: 45%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-40 {
+    width: 40%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-35 {
+    width: 35%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-30 {
+    width: 30%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-25 {
+    width: 25%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .desktop-scale-20 {
+    width: 20%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Any additional styles should go here */

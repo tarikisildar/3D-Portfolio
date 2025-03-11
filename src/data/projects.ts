@@ -33,7 +33,7 @@ export interface Project {
 const projects: Project[] = [
   {
     id: 1,
-    title: 'Master\'s Thesis: Real-Time Depth Completion for Autonomous Driving',
+    title: 'Master\'s Thesis: Real-Time Depth Completion for AVs',
     slug: 'thesis',
     description: 'A novel sensor fusion system combining camera and LiDAR data for generating high-fidelity point clouds for autonomous vehicle teleoperation.',
     imageUrl: '/images/thesis.png',
