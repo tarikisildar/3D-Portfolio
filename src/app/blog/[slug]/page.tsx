@@ -15,18 +15,19 @@ export async function generateStaticParams() {
 // Set dynamic rendering to ensure we always get the latest content
 export const dynamic = 'force-dynamic'
 
-// Remove the custom type and use a more compatible approach
-export default async function BlogPost({
-  params,
-}: {
-  params: { slug: string } | Promise<{ slug: string }>
-}) {
-  // Ensure params is resolved properly
-  const resolvedParams =
-    params instanceof Promise ? await params : params;
+// Define props type with Promise for params
+type Props = {
+  params: Promise<{ slug: string }> | { slug: string }
+}
 
+export default async function BlogPost({ params }: Props) {
+  // Await the params object to resolve it if it's a Promise
+  const resolvedParams = params instanceof Promise ? await params : params;
+
+  // Now use the resolved params
   const { slug } = resolvedParams;
 
+  // Get blog post content
   const post = await getBlogPostBySlug(slug)
 
   // Hardcoded metadata for now - you can enhance this by adding frontmatter to your markdown
