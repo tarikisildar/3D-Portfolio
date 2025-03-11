@@ -188,12 +188,6 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
   const [animating, setAnimating] = useState(false)
   const { camera } = useThree()
 
-  // Mouse position state for interactive camera effect
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [isMouseInView, setIsMouseInView] = useState(false)
-  const returnToBaseRotation = useRef(false)
-  const returnProgress = useRef(0)
-
   // Animation configuration
   const startTimeRef = useRef(0)
   const startPosRef = useRef(new THREE.Vector3())
@@ -203,66 +197,8 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
   const startFovRef = useRef(45)
   const endFovRef = useRef(45)
 
-  // Keep track of base position and target (without mouse influence)
-  const basePosRef = useRef(new THREE.Vector3())
-  const baseTargetRef = useRef(new THREE.Vector3())
-
   // Animation duration in seconds
   const DURATION = 2.5
-
-  // Track mouse position and whether it's in the 3D view container
-  useEffect(() => {
-    // Function to update mouse position
-    const handleMouseMove = (e: MouseEvent) => {
-      // Get the 3D canvas element
-      const canvas = document.querySelector('canvas');
-      if (!canvas) return;
-
-      // Get the canvas bounds
-      const rect = canvas.getBoundingClientRect();
-
-      // Check if mouse is within the canvas
-      const isInside =
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom;
-
-      // Update state based on mouse position
-      setIsMouseInView(isInside);
-
-      if (isInside) {
-        // Convert mouse position to normalized coordinates (-1 to 1)
-        // Use the canvas dimensions for better local coordinates
-        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-        setMousePosition({ x, y });
-        returnToBaseRotation.current = false;
-        returnProgress.current = 0;
-      } else if (!returnToBaseRotation.current) {
-        // Start returning to base rotation
-        returnToBaseRotation.current = true;
-        returnProgress.current = 0;
-      }
-    };
-
-    // Handle mouse leave for the entire window
-    const handleMouseLeave = () => {
-      setIsMouseInView(false);
-      returnToBaseRotation.current = true;
-      returnProgress.current = 0;
-    };
-
-    // Add mouse move and leave listeners
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
 
   // Don't run camera animations if in debug mode
   useEffect(() => {
@@ -281,10 +217,6 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
       const pos = cameraPositions[page].position;
       const target = cameraPositions[page].target;
       const fov = cameraPositions[page].fov;
-
-      // Store base position and target
-      basePosRef.current.set(...pos);
-      baseTargetRef.current.set(...target);
 
       // Update camera
       cameraRef.current.position.set(pos[0], pos[1], pos[2]);
@@ -395,12 +327,6 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
           smoothT
         );
 
-        // Save base position after animation
-        if (progress > 95) {
-          basePosRef.current.copy(endPosRef.current);
-          baseTargetRef.current.copy(endTargetRef.current);
-        }
-
         // Save in persistent state
         currentCamera.position.copy(cameraRef.current.position);
 
@@ -419,82 +345,19 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
         cameraRef.current.updateProjectionMatrix();
         currentCamera.fov = cameraRef.current.fov;
       } else {
-        // Animation complete
-        console.log("Camera animation complete");
+        // Ensure we end exactly at the target values
+        cameraRef.current.position.copy(endPosRef.current);
+        cameraRef.current.lookAt(endTargetRef.current);
+        cameraRef.current.fov = endFovRef.current;
+        cameraRef.current.updateProjectionMatrix();
+
+        // Save final state
+        currentCamera.position.copy(endPosRef.current);
+        currentCamera.target.copy(endTargetRef.current);
+        currentCamera.fov = endFovRef.current;
+
         setAnimating(false);
-
-        // Store the final position and target as the base for mouse movement
-        basePosRef.current.copy(cameraRef.current.position);
-        baseTargetRef.current.copy(currentCamera.target);
-      }
-    } else {
-      // When not animating, apply subtle mouse-based camera rotation (looking around)
-      const mouseIntensity = 0.1; // Adjust this value for more/less effect
-
-      if (basePosRef.current.length() > 0 && baseTargetRef.current.length() > 0) {
-        // Keep camera position fixed
-        cameraRef.current.position.copy(basePosRef.current);
-
-        // Calculate base view direction
-        const baseViewDir = new THREE.Vector3().subVectors(baseTargetRef.current, basePosRef.current).normalize();
-
-        // Apply rotation only if mouse is in view, or smoothly transition back
-        if (isMouseInView) {
-          // Calculate mouse offset
-          const offsetX = mousePosition.x * mouseIntensity;
-          const offsetY = -mousePosition.y * mouseIntensity;
-
-          // Get perpendicular vectors to create rotation plane
-          const rightVector = new THREE.Vector3(0, 1, 0).cross(baseViewDir).normalize();
-          const upVector = rightVector.clone().cross(baseViewDir).normalize();
-
-          // Create a new target point by offsetting from the base view direction
-          const newViewDir = baseViewDir.clone();
-          newViewDir.add(rightVector.clone().multiplyScalar(-offsetX)); // Invert X for natural movement
-          newViewDir.add(upVector.clone().multiplyScalar(offsetY));
-          newViewDir.normalize();
-
-          // Apply the new looking direction by creating a target point
-          const newTarget = basePosRef.current.clone().add(newViewDir.multiplyScalar(10));
-
-          // Look at the new target point
-          cameraRef.current.lookAt(newTarget);
-
-          // Update persistent state (only update the target, keep position unchanged)
-          currentCamera.position.copy(basePosRef.current);
-          currentCamera.target.copy(newTarget);
-        } else if (returnToBaseRotation.current) {
-          // Smoothly transition back to original rotation
-          const RETURN_STEP = 0.03; // how much to increment per frame
-
-          // Increment transition progress
-          returnProgress.current = Math.min(1, returnProgress.current + RETURN_STEP);
-
-          // Create smooth transition using easeOutQuad
-          const t = 1 - (1 - returnProgress.current) * (1 - returnProgress.current);
-
-          // Interpolate between current target and base target
-          const currentTarget = new THREE.Vector3().lerpVectors(
-            currentCamera.target,
-            baseTargetRef.current,
-            t
-          );
-
-          // Apply interpolated rotation
-          cameraRef.current.lookAt(currentTarget);
-
-          // Update persistent state
-          currentCamera.target.copy(currentTarget);
-
-          // Reset flag when transition is complete
-          if (returnProgress.current >= 1) {
-            returnToBaseRotation.current = false;
-          }
-        } else {
-          // If not in view and not transitioning, use base rotation
-          cameraRef.current.lookAt(baseTargetRef.current);
-          currentCamera.target.copy(baseTargetRef.current);
-        }
+        console.log('Camera animation complete');
       }
     }
   });
