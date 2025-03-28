@@ -6,6 +6,7 @@ import ProjectCard from "@/components/ui/ProjectCard";
 import projects from "@/data/projects";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import { track } from '@vercel/analytics';
 
 // Define the page types for random navigation
 const pageTabs = ['about', 'projects', 'cv', 'blog'];
@@ -57,12 +58,24 @@ export default function Home() {
   // Function to navigate to a random tab
   const navigateToRandomTab = () => {
     const randomTab = pageTabs[Math.floor(Math.random() * pageTabs.length)];
+
+    // Track the random navigation
+    track('random_navigation', {
+      location: 'homepage',
+      destination: randomTab
+    });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     router.push(`/${randomTab}`);
   };
 
   // Function to trigger procrastination mode
   const triggerProcrastinate = () => {
+    // Track the card click
+    track('procrastinate_card_click', {
+      location: 'homepage'
+    });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Try to find and click the procrastinate button

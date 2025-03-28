@@ -2,6 +2,15 @@
 
 import aboutData from '@/data/about'
 import Image from 'next/image'
+import { track } from '@vercel/analytics'
+
+// Function to track Teams button click
+const trackTeamsClick = () => {
+  track('teams_button_click', {
+    location: 'about_page',
+    type: 'rickroll'
+  });
+};
 
 export default function About() {
   return (
@@ -189,6 +198,7 @@ export default function About() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-col items-center group transition-transform hover:scale-110"
+                    onClick={trackTeamsClick}
                   >
                     <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-gray-300 to-gray-300 flex items-center justify-center shadow-md mb-3">
                       <Image
