@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
 
 // Define interface for our model context
@@ -40,7 +40,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
   const isLoading = useRef(false)
 
   // Model loading with texture optimization
-  const loadModel = async () => {
+  const loadModel = useCallback(async () => {
     if (typeof window === 'undefined' || isLoading.current) return
 
     isLoading.current = true
@@ -190,7 +190,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
       // Clear loading flag
       isLoading.current = false
     }
-  }
+  }, []);
 
   // Reload model function with more caution
   const reloadModel = () => {
@@ -249,7 +249,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
       const timer = setTimeout(loadModel, 300)
       return () => clearTimeout(timer)
     }
-  }, [isLoaded])
+  }, [isLoaded, loadModel])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -258,7 +258,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
         disposeModel(scene)
       }
     }
-  }, [])
+  }, [scene])
 
   // Create event listener for tab visibility changes
   useEffect(() => {

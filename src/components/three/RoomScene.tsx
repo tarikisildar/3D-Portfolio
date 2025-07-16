@@ -215,9 +215,10 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
       console.log(`Camera: FIRST TIME setup for page: ${page}`);
 
       // Set initial camera position
-      const pos = cameraPositions[page].position;
-      const target = cameraPositions[page].target;
-      const fov = cameraPositions[page].fov;
+      const cameraInfo = cameraPositions[page];
+      const pos = cameraInfo.position;
+      const target = cameraInfo.target;
+      const fov = cameraInfo.fov;
 
       // Update camera
       cameraRef.current.position.set(pos[0], pos[1], pos[2]);
@@ -240,6 +241,7 @@ function AnimatedCamera({ page, debugMode = false }: { page: PageType, debugMode
       cameraRef.current.fov = currentCamera.fov;
       cameraRef.current.updateProjectionMatrix();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, debugMode]);
 
   // Handle page changes for animation
@@ -547,38 +549,6 @@ function VideoScreen({ active, onChangeVideo }: { active: boolean, onChangeVideo
   const [videoTexture, setVideoTexture] = useState<THREE.Texture | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Create a video element that will be reused
-  useEffect(() => {
-    // Create the video element once
-    const video = document.createElement('video');
-    video.crossOrigin = 'anonymous';
-    video.loop = true;
-    // Start muted to avoid autoplay restrictions
-    video.muted = true;
-    video.volume = 0;
-    // Store reference for cleanup
-    videoRef.current = video;
-
-    // Load a video
-    if (active) {
-      loadVideo(video);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.src = '';
-        videoRef.current.load();
-        videoRef.current = null;
-      }
-      if (videoTexture) {
-        videoTexture.dispose();
-        setVideoTexture(null);
-      }
-    };
-  }, []); // Only run once on mount
-
   // Function to load a video into the video element
   const loadVideo = useCallback((videoElement: HTMLVideoElement) => {
     // Choose a random video
@@ -616,6 +586,38 @@ function VideoScreen({ active, onChangeVideo }: { active: boolean, onChangeVideo
       }
     }, 1000);
   }, []);
+
+  // Create a video element that will be reused
+  useEffect(() => {
+    // Create the video element once
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.loop = true;
+    // Start muted to avoid autoplay restrictions
+    video.muted = true;
+    video.volume = 0;
+    // Store reference for cleanup
+    videoRef.current = video;
+
+    // Load a video
+    if (active) {
+      loadVideo(video);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.src = '';
+        videoRef.current.load();
+        videoRef.current = null;
+      }
+      if (videoTexture) {
+        videoTexture.dispose();
+        setVideoTexture(null);
+      }
+    };
+  }, [active, loadVideo, videoTexture]); // Include dependencies
 
   // Handle active state changes
   useEffect(() => {
@@ -713,7 +715,7 @@ export function RoomScene({ page, debugMode = false }: RoomSceneProps) {
         setUseSimpleModel(true);
       }
     }
-  }, [roomModel]);
+  }, [roomModel, texturesOptimized]);
 
   // Skip rendering if model isn't loaded
   if (!roomModel) return null;
