@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { PerspectiveCamera } from '@react-three/drei'
 import { useSharedModel } from './ModelContext'
 import { usePathname } from 'next/navigation'
-import { track } from '@vercel/analytics'
+import { trackProcrastinateAction } from '@/utils/analytics'
 
 // Define camera positions for different pages
 const cameraPositions = {
@@ -508,7 +508,7 @@ function ProcrastinateButtons({
       // Click handler
       procrastinateButton.addEventListener('click', () => {
         // Track procrastinate button click
-        track('procrastinate_button_click', {
+        trackProcrastinateAction('button_click', {
           location: 'room_scene'
         });
 

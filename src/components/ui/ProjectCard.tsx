@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Project, DetailedContent } from '@/data/projects'
+import { trackProjectInteraction } from '@/utils/analytics'
 
 // Extract Google Drive file ID from URL
 const extractGoogleDriveFileId = (url: string): string | null => {
@@ -57,6 +58,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const handleCardClick = () => {
     if (!isExpanded) {
+      // Track project card expansion
+      trackProjectInteraction(project.title, 'expand', {
+        project_id: project.id,
+        category: project.category
+      });
       onExpand(project.id);
     } else {
       handleCloseClick({ stopPropagation: () => {} } as React.MouseEvent);
@@ -517,7 +523,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                     ? "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                     : "px-4 py-2 border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   }
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Track external link click
+                    trackProjectInteraction(project.title, 'external_link_click', {
+                      project_id: project.id,
+                      link_text: link.text,
+                      link_url: link.url,
+                      link_index: index
+                    });
+                  }}
                 >
                   {link.text}
                 </a>

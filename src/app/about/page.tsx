@@ -2,12 +2,11 @@
 
 import aboutData from '@/data/about'
 import Image from 'next/image'
-import { track } from '@vercel/analytics'
+import { trackButtonClick } from '@/utils/analytics'
 
 // Function to track Teams button click
 const trackTeamsClick = () => {
-  track('teams_button_click', {
-    location: 'about_page',
+  trackButtonClick('teams_button', 'about_page', {
     type: 'rickroll'
   });
 };

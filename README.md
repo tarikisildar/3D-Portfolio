@@ -21,6 +21,7 @@ An interactive 3D portfolio website built with Next.js, Three.js, and TailwindCS
 - **3D Graphics**: Three.js, React Three Fiber, React Three Drei
 - **Styling**: TailwindCSS v4, tailwindcss/typography
 - **Content**: Markdown for blog posts
+- **Analytics**: Vercel Analytics + Google Analytics with custom event tracking
 - **Deployment**: Vercel
 
 ## Project Structure
@@ -103,12 +104,21 @@ More content...
    npm install
    ```
 
-3. Run the development server:
+3. Set up environment variables:
+   ```bash
+   cp env.example .env.local
+   ```
+   Then edit `.env.local` and add your Google Analytics ID:
+   ```
+   NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+   ```
+
+4. Run the development server:
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Building for Production
 
@@ -139,7 +149,13 @@ This project is optimized for deployment on Vercel, but can be deployed on any p
      - Output Directory: `.next` (default)
    - Click "Deploy"
 
-3. **Set up a custom domain (optional)**
+3. **Configure Environment Variables in Vercel**
+   - In your Vercel dashboard, go to the project settings
+   - Navigate to "Environment Variables"
+   - Add `NEXT_PUBLIC_GA_ID` with your Google Analytics Measurement ID
+   - Redeploy your application
+
+4. **Set up a custom domain (optional)**
    - In your Vercel dashboard, go to the project settings
    - Navigate to "Domains"
    - Add your custom domain and follow Vercel's DNS configuration instructions
@@ -150,6 +166,40 @@ If you encounter TypeScript errors during deployment, check:
 - Parameter types in page components
 - TypeScript compatibility with your dependencies
 - Proper Next.js configuration in `next.config.mjs`
+
+## Analytics & Tracking
+
+This project includes comprehensive analytics tracking with both Vercel Analytics and Google Analytics:
+
+### Available Tracking Functions
+- **`track(eventName, parameters)`**: Send events to both Vercel and Google Analytics
+- **`trackButtonClick(buttonName, location, additionalParams)`**: Track button interactions
+- **`trackPageView(pageName, additionalParams)`**: Track page views automatically
+- **`trackProjectInteraction(projectName, interactionType, additionalParams)`**: Track project-related actions
+- **`trackProcrastinateAction(actionType, additionalParams)`**: Track procrastination mode interactions
+
+### Current Tracking Events
+- **Procrastinate Button Clicks**: `procrastinate_action` with `action_type: 'button_click'`
+- **Procrastinate Card Clicks**: `procrastinate_action` with `action_type: 'card_click'`
+- **Teams Button Clicks**: `button_click` with `button_name: 'teams_button'`
+- **Random Navigation**: `button_click` with `button_name: 'random_navigation'`
+- **Project Card Expansions**: `project_interaction` with `interaction_type: 'expand'`
+- **External Link Clicks**: `project_interaction` with `interaction_type: 'external_link_click'`
+- **Page Views**: Automatically tracked on route changes
+
+### Example Usage
+```typescript
+import { track, trackButtonClick, trackProjectInteraction } from '@/utils/analytics';
+
+// Custom event
+track('custom_event', { category: 'engagement', action: 'click' });
+
+// Button click
+trackButtonClick('submit_button', 'contact_form', { form_type: 'contact' });
+
+// Project interaction
+trackProjectInteraction('My Project', 'view_details', { project_id: 123 });
+```
 
 ## Performance Optimization
 
