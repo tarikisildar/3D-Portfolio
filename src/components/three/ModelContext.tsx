@@ -12,19 +12,15 @@ interface ModelContextType {
   reloadModel: () => void;
 }
 
-// Interface for Window with optional gc method
-interface WindowWithGC extends Window {
-  gc?: () => void;
-}
-
 // Create context with default empty value
 const ModelContext = createContext<ModelContextType>({
   roomModel: null,
   reloadModel: () => {}
 })
 
-// Path to the model we want to preload and share
-const ROOM_MODEL_PATH = '/models/room_4.glb'
+// Path to the model we want to preload and share.
+// Built from models-src/ by `npm run models` — do not hand-edit the output.
+const ROOM_MODEL_PATH = '/models/rooms/munich.glb'
 
 // Hook for components to easily access our shared model
 export const useSharedModel = () => useContext(ModelContext)
@@ -48,6 +44,11 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
     try {
       // Import the GLTF loader
       const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
+      // Geometry is meshopt-compressed by the asset pipeline. This is a
+      // REQUIRED glTF extension, so without the decoder the load hard-fails.
+      const { MeshoptDecoder } = await import(
+        'three/examples/jsm/libs/meshopt_decoder.module.js'
+      )
 
       // Create a load manager that will help us track and optimize loading
       const manager = new THREE.LoadingManager()
@@ -64,6 +65,7 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
 
       // Create the loader with our custom manager
       const loader = new GLTFLoader(manager)
+      loader.setMeshoptDecoder(MeshoptDecoder)
 
       // Store the loader for potential reuse
       loaderRef.current = loader
@@ -77,72 +79,24 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
       const gltf = await loader.loadAsync(ROOM_MODEL_PATH)
       console.log('Model loaded, applying optimizations...')
 
-      // Clone the scene to avoid reference issues
       const modelScene = gltf.scene
 
-      // Quickly find and optimize all textures
-      const textureCache = new Map<string, THREE.Texture>()
-
+      // Mesh, material and texture de-duplication all happen at build time now
+      // (see scripts/optimize-models.mjs), so nothing needs rewriting here.
+      // The only runtime work left is marking the geometry static: the room
+      // never moves, so we can skip per-frame matrix recomputation.
+      //
+      // Deliberately NOT touched any more:
+      //  - texture filtering. The previous NearestFilter + generateMipmaps:false
+      //    made distant surfaces alias badly while saving almost no memory.
+      //    The glTF samplers already specify correct trilinear filtering.
+      //  - roughness/metalness/envMapIntensity. Overwriting these flattened
+      //    every surface in the room to the same plastic finish.
       modelScene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.frustumCulled = true
           child.matrixAutoUpdate = false
           child.updateMatrix()
-
-          // Try to merge child geometries if possible to reduce draw calls
-          if (child.geometry) {
-            // Set geometry to static usage to reduce GPU updates
-            if (child.geometry.attributes.position) {
-              child.geometry.attributes.position.usage = THREE.StaticDrawUsage
-              child.geometry.attributes.position.needsUpdate = false
-            }
-            if (child.geometry.attributes.normal) {
-              child.geometry.attributes.normal.usage = THREE.StaticDrawUsage
-              child.geometry.attributes.normal.needsUpdate = false
-            }
-            if (child.geometry.attributes.uv) {
-              child.geometry.attributes.uv.usage = THREE.StaticDrawUsage
-              child.geometry.attributes.uv.needsUpdate = false
-            }
-          }
-
-          // Optimize materials and textures
-          if (child.material) {
-            // Handle both single materials and material arrays
-            const materials = Array.isArray(child.material) ? child.material : [child.material]
-
-            materials.forEach(material => {
-              // Disable material updates after initial optimization
-              material.needsUpdate = true
-
-              // Check if this material has a map texture
-              if ('map' in material && material.map) {
-                const texture = material.map
-
-                // Optimize texture settings
-                texture.minFilter = THREE.NearestFilter
-                texture.magFilter = THREE.NearestFilter
-                texture.anisotropy = 1
-                texture.generateMipmaps = false
-                texture.needsUpdate = true
-
-                // Use a single texture instance for identical textures
-                const texturePath = texture.image?.src || ''
-                if (texturePath && textureCache.has(texturePath)) {
-                  material.map = textureCache.get(texturePath)
-                } else if (texturePath) {
-                  textureCache.set(texturePath, texture)
-                }
-              }
-
-              // Adjust material parameters to reduce GPU load
-              if (material instanceof THREE.MeshStandardMaterial) {
-                material.envMapIntensity = 0.5
-                material.roughness = 0.5
-                material.metalness = 0.3
-              }
-            })
-          }
         }
       })
 
@@ -153,29 +107,11 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
       setScene(modelScene)
       setIsLoaded(true)
       retryCount.current = 0
-      console.log('Model successfully loaded and optimized')
 
-      // Force a garbage collection hint 1 second after loading
-      // to help clear any temporary objects created during loading
-      setTimeout(() => {
-        if (typeof window !== 'undefined' && 'gc' in window) {
-          try {
-            // Try to call garbage collection if available
-            const win = window as WindowWithGC;
-            if (win.gc) {
-              win.gc();
-            }
-          } catch {
-            // Ignore errors if gc is not available
-          }
-        }
-
-        // Release references to loader resources
-        loaderRef.current = null
-
-        // Clear texture cache
-        textureCache.clear()
-      }, 1000)
+      // Drop our reference to the loader; the decoded scene no longer needs it.
+      // (There used to be a window.gc() call here, but that only exists behind
+      // a Chrome launch flag and was a no-op for every real visitor.)
+      loaderRef.current = null
     } catch (error) {
       console.error('Error loading model:', error)
 

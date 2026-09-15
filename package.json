@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "models": "node scripts/optimize-models.mjs",
+    "models:check": "node scripts/visual-check.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^15.4.1",
@@ -26,6 +28,9 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -33,6 +38,9 @@
     "@types/three": "^0.174.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
+    "meshoptimizer": "^1.2.0",
+    "puppeteer-core": "^25.11.0",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

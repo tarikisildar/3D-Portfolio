@@ -737,7 +737,9 @@ export function RoomScene({ page, debugMode = false }: RoomSceneProps) {
         <SimpleRoomReplacement />
       )}
 
-      <ambientLight intensity={1} />
+      {/* Lighting lives in Scene3D. There used to be a second ambientLight
+          here, which stacked with that one to 1.5 total and washed out the
+          directional light, leaving every surface in the room shadeless. */}
 
       <VideoScreen
         active={procrastinateMode}

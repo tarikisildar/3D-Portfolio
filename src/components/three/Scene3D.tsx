@@ -63,14 +63,17 @@ export default function Scene3D() {
         gl={{
           antialias: true,
           alpha: true,
-          powerPreference: 'default',
-          preserveDrawingBuffer: true, // More stable
+          powerPreference: 'high-performance',
+          // preserveDrawingBuffer forces a framebuffer copy every single frame
+          // and is only needed to read pixels back (screenshots). Off.
         }}
       >
         <color attach="background" args={['#f5e5d3']} />
 
-        {/* Basic lighting */}
-        <ambientLight intensity={0.5} />
+        {/* The only lighting in the scene. Ambient is kept low enough that the
+            directional light still does the shading work and the room reads as
+            having form. */}
+        <ambientLight intensity={0.75} />
         <directionalLight
           castShadow
           position={[10, 10, 5]}
