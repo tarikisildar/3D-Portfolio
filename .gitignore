@@ -47,3 +47,6 @@ next-env.d.ts
 *.blend1
 *.blend2
 models-src/**/backups/
+
+# Generated apartment reference material (kept locally, not source)
+/output/
