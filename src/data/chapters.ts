@@ -70,13 +70,37 @@ const MUNICH: Chapter = {
 }
 
 /**
+ * A stand-in chapter for previewing the map transition before the Nuremberg
+ * apartment exists. Real coordinates, Munich's model as a placeholder.
+ *
+ * Off unless NEXT_PUBLIC_PREVIEW_CHAPTER=1, so production always ships the
+ * real chapter list:
+ *
+ *   NEXT_PUBLIC_PREVIEW_CHAPTER=1 npm run dev
+ *
+ * Delete this once nuremberg.glb is real.
+ */
+const NUREMBERG_PREVIEW: Chapter = {
+  ...MUNICH,
+  id: 'nuremberg',
+  label: 'Nuremberg',
+  city: 'Nuremberg',
+  coords: [49.4521, 11.0767],
+  period: ['2025', null],
+  sections: ['home', 'projects', 'cv'],
+}
+
+/**
  * Chronological. The map transition animates between consecutive entries, and
  * the timeline UI renders them in this order.
  *
- * Adding Nuremberg means appending a chapter here and dropping its GLB into
- * models-src/rooms/ — no changes to the scene code.
+ * Adding Nuremberg for real means appending a chapter here and dropping its
+ * GLB into models-src/rooms/ — no changes to the scene code.
  */
-export const chapters: Chapter[] = [MUNICH]
+export const chapters: Chapter[] =
+  process.env.NEXT_PUBLIC_PREVIEW_CHAPTER === '1'
+    ? [MUNICH, NUREMBERG_PREVIEW]
+    : [MUNICH]
 
 /** The chapter shown on first load. */
 export const DEFAULT_CHAPTER_ID = MUNICH.id
