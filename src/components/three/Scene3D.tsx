@@ -8,6 +8,7 @@ import { Loader } from '@react-three/drei'
 // Import the RoomScene component as a normal import to avoid re-mounting
 import { RoomScene } from './RoomScene'
 import type { PageType } from './shots'
+import { useProcrastinate } from './ProcrastinateContext'
 
 // Map paths to page types
 const getPageTypeFromPath = (path: string): PageType => {
@@ -85,7 +86,50 @@ export default function Scene3D() {
         </Suspense>
       </Canvas>
 
+      <ProcrastinateControls />
+
       <Loader />
+    </div>
+  )
+}
+
+/**
+ * The in-scene buttons, as ordinary DOM overlaying the canvas.
+ *
+ * These used to be built with document.createElement and ~150 lines of inline
+ * style assignments, then attached to a parent located by matching an inline
+ * style string. They are just buttons.
+ */
+function ProcrastinateControls() {
+  const { active, start, exit, nextVideo } = useProcrastinate()
+
+  const base =
+    'px-4 py-2 rounded-md text-white text-sm font-semibold shadow-md transition-all ' +
+    'hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 ' +
+    'focus-visible:ring-white/70'
+
+  return (
+    <div className="absolute bottom-5 right-5 z-10 flex gap-2.5">
+      {active ? (
+        <>
+          <button onClick={exit} className={`${base} bg-red-500 hover:bg-red-400`}>
+            Exit
+          </button>
+          <button
+            onClick={nextVideo}
+            className={`${base} bg-green-600 hover:bg-green-500`}
+          >
+            Next Video
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={() => start('button_click', 'room_scene')}
+          className={`${base} bg-[#ff6b6b] hover:bg-[#ff8787]`}
+        >
+          Procrastinate
+        </button>
+      )}
     </div>
   )
 }

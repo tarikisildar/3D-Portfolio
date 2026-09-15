@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import ProjectCard from "@/components/ui/ProjectCard";
 import projects from "@/data/projects";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { trackProcrastinateAction, trackButtonClick } from '@/utils/analytics';
+import { trackButtonClick } from '@/utils/analytics';
+import { useProcrastinate } from '@/components/three/ProcrastinateContext';
 
 // Define the page types for random navigation
 const pageTabs = ['about', 'projects', 'cv', 'blog'];
 
 export default function Home() {
   const router = useRouter();
-  const procrastinateButtonRef = useRef<HTMLButtonElement | null>(null);
+  const { start: startProcrastinating } = useProcrastinate();
 
   // Filter featured projects
   const featuredProjects = projects.filter((project) => project.featured);
@@ -28,32 +28,6 @@ export default function Home() {
       }
     }
   };
-
-  // Find the procrastinate button on mount with retries
-  useEffect(() => {
-    // Function to find the button in the DOM
-    const findButton = () => {
-      const button = document.querySelector('button[style*="background-color: rgb(255, 107, 107)"]') as HTMLButtonElement;
-      if (button) {
-        procrastinateButtonRef.current = button;
-        return true;
-      }
-      return false;
-    };
-
-    // Try immediately
-    if (findButton()) return;
-
-    // Set up intervals to keep trying
-    const interval = setInterval(() => {
-      if (findButton()) {
-        clearInterval(interval);
-      }
-    }, 500); // Check every 500ms
-
-    // Cleanup
-    return () => clearInterval(interval);
-  }, []);
 
   // Function to navigate to a random tab
   const navigateToRandomTab = () => {
@@ -70,33 +44,8 @@ export default function Home() {
 
   // Function to trigger procrastination mode
   const triggerProcrastinate = () => {
-    // Track the card click
-    trackProcrastinateAction('card_click', {
-      location: 'homepage'
-    });
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Try to find and click the procrastinate button
-    const clickProcrastinateButton = () => {
-      // First check if we already have a reference
-      if (procrastinateButtonRef.current) {
-        procrastinateButtonRef.current.click();
-        return;
-      }
-
-      // Otherwise try to find it again
-      const button = document.querySelector('button[style*="background-color: rgb(255, 107, 107)"]') as HTMLButtonElement;
-      if (button) {
-        procrastinateButtonRef.current = button;
-        button.click();
-      } else {
-        // If button not found, try again after a short delay
-        setTimeout(clickProcrastinateButton, 200);
-      }
-    };
-
-    clickProcrastinateButton();
+    startProcrastinating('card_click', 'homepage');
   };
 
   // Function to scroll to top

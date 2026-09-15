@@ -1,12 +1,11 @@
 'use client'
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { useSharedModel } from './ModelContext'
-import { usePathname } from 'next/navigation'
-import { trackProcrastinateAction } from '@/utils/analytics'
 import { CameraRig } from './CameraRig'
 import { extractShots, resolveShots, type PageType } from './shots'
+import { useProcrastinate } from './ProcrastinateContext'
 
 /**
  * Where the room sits in the scene. Shots authored inside the GLB are read from
@@ -41,156 +40,6 @@ interface RoomSceneProps {
    * point of view nothing had changed.
    */
   onBusyChange?: (busy: boolean) => void;
-}
-
-// UI buttons for procrastination feature
-function ProcrastinateButtons({
-  isActive,
-  onToggle,
-  onNextVideo
-}: {
-  isActive: boolean,
-  onToggle: () => void,
-  onNextVideo: () => void
-}) {
-  // Create DOM buttons
-  useEffect(() => {
-    // Create container for the buttons
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.bottom = '20px';
-    container.style.right = '20px';
-    container.style.zIndex = '1000';
-    container.style.display = 'flex';
-    container.style.gap = '10px';
-
-    if (isActive) {
-      // Create exit button
-      const exitButton = document.createElement('button');
-      exitButton.textContent = 'Exit';
-      exitButton.style.padding = '8px 16px';
-      exitButton.style.backgroundColor = '#f44336';
-      exitButton.style.color = 'white';
-      exitButton.style.border = 'none';
-      exitButton.style.borderRadius = '4px';
-      exitButton.style.fontFamily = 'sans-serif';
-      exitButton.style.fontWeight = 'bold';
-      exitButton.style.cursor = 'pointer';
-      exitButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      exitButton.style.transition = 'all 0.2s ease';
-
-      // Hover effect
-      exitButton.addEventListener('mouseenter', () => {
-        exitButton.style.backgroundColor = '#f77066';
-        exitButton.style.transform = 'translateY(-2px)';
-        exitButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-      });
-
-      exitButton.addEventListener('mouseleave', () => {
-        exitButton.style.backgroundColor = '#f44336';
-        exitButton.style.transform = 'translateY(0)';
-        exitButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      });
-
-      // Click handler
-      exitButton.addEventListener('click', onToggle);
-
-      // Create next video button
-      const nextButton = document.createElement('button');
-      nextButton.textContent = 'Next Video';
-      nextButton.style.padding = '8px 16px';
-      nextButton.style.backgroundColor = '#4CAF50';
-      nextButton.style.color = 'white';
-      nextButton.style.border = 'none';
-      nextButton.style.borderRadius = '4px';
-      nextButton.style.fontFamily = 'sans-serif';
-      nextButton.style.fontWeight = 'bold';
-      nextButton.style.cursor = 'pointer';
-      nextButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      nextButton.style.transition = 'all 0.2s ease';
-
-      // Hover effect
-      nextButton.addEventListener('mouseenter', () => {
-        nextButton.style.backgroundColor = '#6abf6e';
-        nextButton.style.transform = 'translateY(-2px)';
-        nextButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-      });
-
-      nextButton.addEventListener('mouseleave', () => {
-        nextButton.style.backgroundColor = '#4CAF50';
-        nextButton.style.transform = 'translateY(0)';
-        nextButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      });
-
-      // Click handler
-      nextButton.addEventListener('click', onNextVideo);
-
-      // Add buttons to container
-      container.appendChild(exitButton);
-      container.appendChild(nextButton);
-    } else {
-      // Create procrastinate button
-      const procrastinateButton = document.createElement('button');
-      procrastinateButton.textContent = 'Procrastinate';
-      procrastinateButton.style.padding = '8px 16px';
-      procrastinateButton.style.backgroundColor = '#ff6b6b';
-      procrastinateButton.style.color = 'white';
-      procrastinateButton.style.border = 'none';
-      procrastinateButton.style.borderRadius = '4px';
-      procrastinateButton.style.fontFamily = 'sans-serif';
-      procrastinateButton.style.fontWeight = 'bold';
-      procrastinateButton.style.cursor = 'pointer';
-      procrastinateButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      procrastinateButton.style.transition = 'all 0.2s ease';
-
-      // Hover effect
-      procrastinateButton.addEventListener('mouseenter', () => {
-        procrastinateButton.style.backgroundColor = '#ff8787';
-        procrastinateButton.style.transform = 'translateY(-2px)';
-        procrastinateButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-      });
-
-      procrastinateButton.addEventListener('mouseleave', () => {
-        procrastinateButton.style.backgroundColor = '#ff6b6b';
-        procrastinateButton.style.transform = 'translateY(0)';
-        procrastinateButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-      });
-
-      // Click handler
-      procrastinateButton.addEventListener('click', () => {
-        // Track procrastinate button click
-        trackProcrastinateAction('button_click', {
-          location: 'room_scene'
-        });
-
-        // Call the original toggle function
-        onToggle();
-      });
-
-      // Add button to container
-      container.appendChild(procrastinateButton);
-    }
-
-    // Add container to correct parent - in the Scene3D component's div
-    const canvasParent = document.querySelector('div[style*="width: 100%; height: 100%"]');
-    if (canvasParent) {
-      canvasParent.appendChild(container);
-    } else {
-      // Fallback to document.body if we can't find the canvas parent
-      document.body.appendChild(container);
-    }
-
-    // Clean up on unmount
-    return () => {
-      if (canvasParent && canvasParent.contains(container)) {
-        canvasParent.removeChild(container);
-      } else if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
-    };
-  }, [isActive, onToggle, onNextVideo]);
-
-  return null;
 }
 
 const VIDEO_SOURCES = [
@@ -249,8 +98,9 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
       texture.dispose()
       setVideoTexture(null)
     }
-    // FrameloopController keeps the loop running while procrastinate mode is
-    // on, which is what actually pushes new video frames to the texture.
+    // While procrastinate mode is on, RoomScene reports "busy" upward and the
+    // Canvas runs frameloop="always" — that is what pushes new video frames
+    // into the texture.
   }, [active, sequence, offset])
 
   if (!active || !videoTexture) return null
@@ -271,27 +121,12 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
 export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   const { roomModel } = useSharedModel()
   const roomRef = useRef<THREE.Group>(null)
-  const [procrastinateMode, setProcrastinateMode] = useState(false);
-  const [videoChangeCounter, setVideoChangeCounter] = useState(0);
+  // Procrastinate mode is shared with the page content outside the Canvas, so
+  // it lives in a context rather than in this component.
+  const { active: procrastinateMode, sequence } = useProcrastinate()
   // Shots authored inside the room, once we have been able to read them out.
   const [authoredShots, setAuthoredShots] = useState({})
   const [cameraMoving, setCameraMoving] = useState(false)
-  const pathname = usePathname();
-
-  // Function to toggle procrastinate mode
-  const toggleProcrastinate = useCallback(() => {
-    setProcrastinateMode(prev => !prev);
-  }, []);
-
-  // Function to change to next video
-  const changeVideo = useCallback(() => {
-    setVideoChangeCounter(prev => prev + 1);
-  }, []);
-
-  // Turn off procrastinate mode when navigating between pages
-  useEffect(() => {
-    setProcrastinateMode(false);
-  }, [pathname]);
 
   // Read `shot_*` cameras out of the room once it is in the scene graph. This
   // runs against the positioned group, not the raw GLB, so the shots come back
@@ -329,13 +164,7 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
           here, which stacked with that one to 1.5 total and washed out the
           directional light, leaving every surface in the room shadeless. */}
 
-      <VideoScreen active={procrastinateMode} sequence={videoChangeCounter} />
-
-      <ProcrastinateButtons
-        isActive={procrastinateMode}
-        onToggle={toggleProcrastinate}
-        onNextVideo={changeVideo}
-      />
+      <VideoScreen active={procrastinateMode} sequence={sequence} />
     </>
   );
 }
