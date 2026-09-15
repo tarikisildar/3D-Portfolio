@@ -42,3 +42,8 @@ next-env.d.ts
 
 # render output from `npm run models:check`
 /.visual-check/
+
+# Blender autosaves and backup copies
+*.blend1
+*.blend2
+models-src/**/backups/
