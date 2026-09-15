@@ -2,14 +2,12 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { Loader } from '@react-three/drei'
 
 // Import the RoomScene component as a normal import to avoid re-mounting
 import { RoomScene } from './RoomScene'
-
-// Map paths to page types to handle route changes
-type PageType = 'home' | 'about' | 'projects' | 'cv' | 'blog' | 'notFound' | 'procrastinate'
+import type { PageType } from './shots'
 
 // Map paths to page types
 const getPageTypeFromPath = (path: string): PageType => {
@@ -19,15 +17,6 @@ const getPageTypeFromPath = (path: string): PageType => {
   if (path.startsWith('/cv')) return 'cv'
   if (path.startsWith('/blog')) return 'blog'
   return 'notFound'
-}
-
-// Helper component to ensure we render frames even when "nothing" is happening
-// This is important for smooth animation transitions
-function ForceRender() {
-  useFrame(() => {
-    // This empty useFrame hook forces rendering
-  })
-  return null
 }
 
 export default function Scene3D() {
@@ -59,7 +48,12 @@ export default function Scene3D() {
       <Canvas
         shadows
         dpr={[1, 1.5]} // Reduced to save memory
-        frameloop="always" // Always render to ensure animations work
+        // The room is static the overwhelming majority of the time. "demand"
+        // renders only when something asks for it: CameraRig calls invalidate()
+        // while a move is in flight, and VideoScreen does the same while a video
+        // is playing. The previous "always" + an empty useFrame burned 60fps of
+        // GPU and battery to redraw an unchanging image.
+        frameloop="demand"
         gl={{
           antialias: true,
           alpha: true,
@@ -81,9 +75,6 @@ export default function Scene3D() {
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-
-        {/* Force render frames */}
-        <ForceRender />
 
         {/* Pass currentPage to RoomScene - this will trigger animation */}
         <Suspense fallback={null}>
