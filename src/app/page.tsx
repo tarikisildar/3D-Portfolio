@@ -7,6 +7,7 @@ import projects from "@/data/projects";
 import Image from "next/image";
 import { trackButtonClick } from '@/utils/analytics';
 import { useProcrastinate } from '@/components/three/ProcrastinateContext';
+import { useChapter } from '@/components/three/ChapterContext';
 
 // Define the page types for random navigation
 const pageTabs = ['about', 'projects', 'cv', 'blog'];
@@ -14,6 +15,10 @@ const pageTabs = ['about', 'projects', 'cv', 'blog'];
 export default function Home() {
   const router = useRouter();
   const { start: startProcrastinating } = useProcrastinate();
+  // Landing copy is per chapter: the greeting, the description of *this* room,
+  // and the About teaser all belong to the era you are standing in.
+  const { chapter } = useChapter();
+  const home = chapter.content.home;
 
   // Filter featured projects
   const featuredProjects = projects.filter((project) => project.featured);
@@ -60,7 +65,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h1 className="text-5xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
-              Hi, I&apos;m Tarik
+              {home.greeting}
             </h1>
             <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto rounded-full my-6"></div>
           </div>
@@ -75,7 +80,7 @@ export default function Home() {
                 <h3 className="text-xl font-semibold">My Virtual Room</h3>
               </div>
               <p className="text-foreground/80">
-                Welcome to my virtual room! It&apos;s an exact replica of the mancave I lived in for the last 2 years in Munich.
+                {home.roomBlurb}
               </p>
             </div>
 
@@ -153,12 +158,11 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div className="order-2 md:order-1">
               <h2 className="text-3xl font-bold mb-6">About Me</h2>
-              <p className="text-foreground/70 mb-6">
-                I&apos;m a Computer Graphics and Robotics specialist with an M.Sc. from the Technical University of Munich, where I&apos;ve focused on real-time rendering, autonomous systems, and AI-powered solutions.
-              </p>
-              <p className="text-foreground/70 mb-8">
-                Over the years, I&apos;ve worked on exciting projects ranging from autonomous vehicle systems to real-time visualization tools, blending technical expertise with creativity to solve complex challenges.
-              </p>
+              {home.aboutPreview.map((paragraph, i) => (
+                <p key={i} className="text-foreground/70 mb-6 last:mb-8">
+                  {paragraph}
+                </p>
+              ))}
               <Link
                 href="/about"
                 className="border border-primary hover:bg-primary hover:text-white text-primary px-6 py-3 rounded-full font-medium transition-colors inline-block"
@@ -171,7 +175,7 @@ export default function Home() {
               <div className="aspect-square rounded-lg overflow-hidden relative bg-foreground/10">
                 {/* Personal photo */}
                 <Image
-                  src="/images/tarik/me.jpg"
+                  src={home.photo}
                   alt="Profile photo"
                   fill
                   className="object-cover"

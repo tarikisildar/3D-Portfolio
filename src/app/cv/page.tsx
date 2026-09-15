@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { useChapter } from '@/components/three/ChapterContext'
+import { ChapterMissing } from '@/components/ui/ChapterMissing'
 
 export default function CV() {
-  // Convert a standard Google Drive file URL to an embed URL
-  // Example input: https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing
-  // You'll need to replace YOUR_GOOGLE_DRIVE_PDF_URL with your actual Google Drive PDF URL
-  const googleDriveFileUrl = "https://drive.google.com/file/d/1lECifvuwI0C0rcDrEyp-JhCZPJO3Hddc/view?usp=sharing"
+  // The CV is versioned per chapter: each era links its own document, so the
+  // timeline shows the CV as it stood then rather than only the latest one.
+  const { chapter } = useChapter()
+  const googleDriveFileUrl = chapter.content.cv?.driveUrl
 
   // Extract the file ID from the Google Drive URL
   const getEmbedUrl = (url: string) => {
@@ -19,21 +21,22 @@ export default function CV() {
     return url // Return original if we can't extract the ID
   }
 
-  const embedUrl = getEmbedUrl(googleDriveFileUrl)
+  const embedUrl = googleDriveFileUrl ? getEmbedUrl(googleDriveFileUrl) : ''
 
   const handlePrint = () => {
-    // Open the direct PDF URL in a new tab for printing
-    window.open(googleDriveFileUrl, '_blank')
+    if (googleDriveFileUrl) window.open(googleDriveFileUrl, '_blank')
   }
 
   const handleDownload = () => {
-    // Generate a download URL from the file ID
+    if (!googleDriveFileUrl) return
     const match = googleDriveFileUrl.match(/\/d\/(.+?)\//)
     if (match && match[1]) {
       const downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`
       window.open(downloadUrl, '_blank')
     }
   }
+
+  if (!googleDriveFileUrl) return <ChapterMissing section="A CV" />
 
   return (
     <main className="py-20 px-4 print:pt-0">

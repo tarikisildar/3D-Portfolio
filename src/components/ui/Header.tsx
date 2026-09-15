@@ -3,22 +3,38 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useChapter } from '@/components/three/ChapterContext'
+import { DEFAULT_CHAPTER_ID } from '@/data/chapters'
+import type { PageType } from '@/components/three/shots'
+
+/** Every section the site knows about, in nav order. */
+const SECTIONS: { section: PageType; name: string; href: string }[] = [
+  { section: 'home', name: 'Home', href: '/' },
+  { section: 'about', name: 'About', href: '/about' },
+  { section: 'projects', name: 'Projects', href: '/projects' },
+  { section: 'cv', name: 'CV', href: '/cv' },
+  { section: 'blog', name: 'Blog', href: '/blog' },
+]
 
 export default function Header() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { chapter } = useChapter()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
-  const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'CV', href: '/cv' },
-    { name: 'Blog', href: '/blog' },
-  ]
+  // Only the sections this chapter actually offers.
+  const navigation = SECTIONS.filter((s) => chapter.sections.includes(s.section))
+    // Carry the era through navigation. Chapter lives in client state, so the
+    // content would stay correct without this — but the URL would quietly drop
+    // ?era= on the first link click, and a refresh would then snap you back to
+    // the default chapter.
+    .map((s) => ({
+      ...s,
+      href: chapter.id === DEFAULT_CHAPTER_ID ? s.href : `${s.href}?era=${chapter.id}`,
+    }))
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-foreground/10">
@@ -37,7 +53,7 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={`py-2 text-sm font-medium transition-colors ${
-                  pathname === item.href
+                  pathname === item.href.split('?')[0]
                     ? 'text-primary border-b-2 border-primary'
                     : 'text-foreground/80 hover:text-primary'
                 }`}
@@ -102,7 +118,7 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === item.href
+                  pathname === item.href.split('?')[0]
                     ? 'text-primary bg-primary/10'
                     : 'text-foreground/80 hover:text-primary'
                 }`}

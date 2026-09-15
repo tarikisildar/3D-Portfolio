@@ -1,8 +1,9 @@
 'use client'
 
-import aboutData from '@/data/about'
 import Image from 'next/image'
 import { trackButtonClick } from '@/utils/analytics'
+import { useChapter } from '@/components/three/ChapterContext'
+import { ChapterMissing } from '@/components/ui/ChapterMissing'
 
 // Function to track Teams button click
 const trackTeamsClick = () => {
@@ -12,6 +13,13 @@ const trackTeamsClick = () => {
 };
 
 export default function About() {
+  // The About page is versioned per chapter: each era has its own bio, so
+  // moving through the timeline is a look back at who I was then.
+  const { chapter } = useChapter()
+  const aboutData = chapter.content.about
+
+  if (!aboutData) return <ChapterMissing section="An About page" />
+
   return (
     <>
       {/* About Content */}
