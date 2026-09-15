@@ -69,38 +69,33 @@ const MUNICH: Chapter = {
   },
 }
 
-/**
- * A stand-in chapter for previewing the map transition before the Nuremberg
- * apartment exists. Real coordinates, Munich's model as a placeholder.
- *
- * Off unless NEXT_PUBLIC_PREVIEW_CHAPTER=1, so production always ships the
- * real chapter list:
- *
- *   NEXT_PUBLIC_PREVIEW_CHAPTER=1 npm run dev
- *
- * Delete this once nuremberg.glb is real.
- */
-const NUREMBERG_PREVIEW: Chapter = {
-  ...MUNICH,
+const NUREMBERG: Chapter = {
   id: 'nuremberg',
   label: 'Nuremberg',
   city: 'Nuremberg',
   coords: [49.4521, 11.0767],
   period: ['2025', null],
+  model: '/models/rooms/nuremberg.glb',
+  // The apartment is ~10.9m x 6.5m against Munich's ~3m square, and the model
+  // already sits centred on its own origin. Scale matches Munich so a metre
+  // means the same thing in both chapters — the new place should read as
+  // genuinely bigger, not as the same room drawn larger.
+  transform: {
+    position: [0, -2, 0],
+    scale: 1.5,
+    rotation: [0, Math.PI / 4, 0],
+  },
   sections: ['home', 'projects', 'cv'],
+  // No fallbackShots on purpose. With no `shot_*` cameras in the GLB yet, the
+  // scene auto-frames from the room's bounds (see deriveShots). Authoring
+  // cameras in Blender will override that — do not hand-tune numbers here.
 }
 
 /**
  * Chronological. The map transition animates between consecutive entries, and
  * the timeline UI renders them in this order.
- *
- * Adding Nuremberg for real means appending a chapter here and dropping its
- * GLB into models-src/rooms/ — no changes to the scene code.
  */
-export const chapters: Chapter[] =
-  process.env.NEXT_PUBLIC_PREVIEW_CHAPTER === '1'
-    ? [MUNICH, NUREMBERG_PREVIEW]
-    : [MUNICH]
+export const chapters: Chapter[] = [MUNICH, NUREMBERG]
 
 /** The chapter shown on first load. */
 export const DEFAULT_CHAPTER_ID = MUNICH.id

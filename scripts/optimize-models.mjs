@@ -176,6 +176,26 @@ async function optimize(srcPath, outPath) {
 
   const after = await analyze(document);
 
+  // Surface missing camera shots. Without them the room falls back to
+  // auto-framing from its bounding box, which is viewable but generic — easy
+  // to forget when the room otherwise looks finished.
+  const shotNodes = document
+    .getRoot()
+    .listNodes()
+    .filter((n) => (n.getName() || '').startsWith('shot_'));
+
+  if (shotNodes.length === 0) {
+    console.log(
+      '    note: no shot_* cameras found — the site will auto-frame this room.\n' +
+        '          Add cameras named shot_home, shot_projects, … in Blender to\n' +
+        '          control the framing.'
+    );
+  } else {
+    console.log(
+      `    shots: ${shotNodes.map((n) => n.getName().slice(5)).join(', ')}`
+    );
+  }
+
   await mkdir(dirname(outPath), { recursive: true });
   await io.write(outPath, document);
   const outBytes = (await stat(outPath)).size;

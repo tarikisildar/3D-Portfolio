@@ -114,15 +114,106 @@ export function extractShots(root: THREE.Object3D): Partial<Record<PageType, Sho
 }
 
 /**
- * Shots authored in the room win; anything it does not define falls back to the
- * chapter's own table, and anything neither supplies falls back to a safe wide
- * view — so a half-finished room is still navigable rather than throwing.
+ * Frame a box from a given direction, backing off just far enough that all of
+ * it fits the viewport.
+ *
+ * Fitting the bounding *sphere* is the tempting shortcut, but it fails badly
+ * for rooms that are wide and flat: an 11m apartment with 1.4m walls has a
+ * sphere dominated by its width, so fitting that sphere against the vertical
+ * field of view parks the camera ~37 units away and the room ends up a speck.
+ *
+ * Instead, project the eight corners into camera space and solve for the
+ * distance at which every one of them is inside the frustum, horizontally and
+ * vertically. `aspect` matters: the scene is a wide letterbox, so the
+ * horizontal field of view is far more generous than the vertical one.
+ */
+function frameBox(
+  box: THREE.Box3,
+  direction: [number, number, number],
+  fov: number,
+  aspect: number,
+  padding = 1.06
+): Shot {
+  const centre = box.getCenter(new THREE.Vector3())
+  const dir = new THREE.Vector3(...direction).normalize()
+
+  // Camera basis: it sits along +dir and looks back at the centre.
+  const forward = dir.clone().negate()
+  const right = new THREE.Vector3().crossVectors(forward, WORLD_UP).normalize()
+  const up = new THREE.Vector3().crossVectors(right, forward).normalize()
+
+  const tanV = Math.tan((fov * Math.PI) / 360)
+  const tanH = tanV * aspect
+
+  const corner = new THREE.Vector3()
+  let distance = 0
+
+  for (let i = 0; i < 8; i++) {
+    corner.set(
+      i & 1 ? box.max.x : box.min.x,
+      i & 2 ? box.max.y : box.min.y,
+      i & 4 ? box.max.z : box.min.z
+    )
+    corner.sub(centre)
+
+    // Depth toward the camera, and offsets across the view plane.
+    const depth = corner.dot(dir)
+    const x = Math.abs(corner.dot(right))
+    const y = Math.abs(corner.dot(up))
+
+    distance = Math.max(distance, depth + x / tanH, depth + y / tanV)
+  }
+
+  const eye = centre.clone().addScaledVector(dir, distance * padding)
+  const m = new THREE.Matrix4().lookAt(eye, centre, WORLD_UP)
+
+  return {
+    position: eye,
+    quaternion: new THREE.Quaternion().setFromRotationMatrix(m),
+    fov,
+  }
+}
+
+/**
+ * Auto-framed shots derived from wherever the room actually is.
+ *
+ * A new room with no `shot_*` cameras would otherwise inherit framing tuned for
+ * a different room entirely — and since rooms vary hugely in size (a 3m study
+ * versus an 11m apartment), that means the camera ends up inside a wall or out
+ * in space. These are not good shots, but they are *correct* ones: every angle
+ * sees the whole room. Authoring cameras in Blender replaces them.
+ */
+export function deriveShots(
+  root: THREE.Object3D,
+  aspect: number
+): Record<PageType, Shot> {
+  root.updateMatrixWorld(true)
+  const box = new THREE.Box3().setFromObject(root)
+
+  return {
+    home: frameBox(box, [1, 0.8, 1], 35, aspect),
+    about: frameBox(box, [-1, 0.65, 1], 40, aspect),
+    projects: frameBox(box, [1, 0.65, -1], 40, aspect),
+    cv: frameBox(box, [0.2, 1.4, 0.5], 45, aspect),
+    blog: frameBox(box, [-1, 0.55, -1], 45, aspect),
+    notFound: frameBox(box, [0.6, 1.1, 1], 55, aspect, 1.5),
+    procrastinate: frameBox(box, [1, 0.8, 1], 35, aspect),
+  }
+}
+
+/**
+ * Precedence: cameras authored in the room, then the chapter's own table, then
+ * auto-framing from the room's bounds, then a fixed wide view.
+ *
+ * A half-authored room therefore stays navigable instead of pointing the camera
+ * at nothing.
  */
 export function resolveShots(
   authored: Partial<Record<PageType, Shot>>,
-  chapterFallbacks: Partial<Record<PageType, Shot>> = {}
+  chapterFallbacks: Partial<Record<PageType, Shot>> = {},
+  derived: Partial<Record<PageType, Shot>> = {}
 ): Record<PageType, Shot> {
-  const merged = { ...chapterFallbacks, ...authored }
+  const merged = { ...derived, ...chapterFallbacks, ...authored }
   const safe = merged.home ?? SAFE_DEFAULT_SHOT
 
   return {

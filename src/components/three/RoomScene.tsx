@@ -1,10 +1,11 @@
 'use client'
 
 import { useRef, useEffect, useState, useMemo } from 'react'
+import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useSharedModel } from './ModelContext'
 import { CameraRig } from './CameraRig'
-import { extractShots, resolveShots, type PageType } from './shots'
+import { extractShots, deriveShots, resolveShots, type PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
 import { useChapter } from './ChapterContext'
 
@@ -119,7 +120,10 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   const { active: procrastinateMode, sequence } = useProcrastinate()
   // Shots authored inside the room, once we have been able to read them out.
   const [authoredShots, setAuthoredShots] = useState({})
+  const [derivedShots, setDerivedShots] = useState({})
   const [cameraMoving, setCameraMoving] = useState(false)
+  // Auto-framing needs the real viewport shape: the scene is a wide letterbox.
+  const aspect = useThree((s) => s.size.width / s.size.height)
 
   // Read `shot_*` cameras out of the room once it is in the scene graph. This
   // runs against the positioned group, not the raw GLB, so the shots come back
@@ -127,11 +131,14 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   useEffect(() => {
     if (!roomModel?.scene || !roomRef.current) return
     setAuthoredShots(extractShots(roomRef.current))
-  }, [roomModel])
+    // Auto-framing from the room's own bounds, so a room with no authored
+    // cameras is still viewable rather than inheriting another room's framing.
+    setDerivedShots(deriveShots(roomRef.current, aspect))
+  }, [roomModel, aspect])
 
   const shots = useMemo(
-    () => resolveShots(authoredShots, chapter.fallbackShots),
-    [authoredShots, chapter.fallbackShots]
+    () => resolveShots(authoredShots, chapter.fallbackShots, derivedShots),
+    [authoredShots, chapter.fallbackShots, derivedShots]
   )
   const activeShot = shots[procrastinateMode ? 'procrastinate' : page]
 
