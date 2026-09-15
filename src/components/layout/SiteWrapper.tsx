@@ -6,6 +6,7 @@ import Footer from '@/components/ui/Footer'
 import dynamic from 'next/dynamic'
 import { ModelProvider } from '@/components/three/ModelContext'
 import { ProcrastinateProvider } from '@/components/three/ProcrastinateContext'
+import { ChapterProvider } from '@/components/three/ChapterContext'
 
 // Dynamically import the 3D scene component with no SSR
 const Scene3D = dynamic(
@@ -40,22 +41,26 @@ export default function SiteWrapper({ children }: SiteWrapperProps) {
     // lets the homepage card and the in-scene button share one piece of state
     // instead of the card hunting for the button in the DOM.
     <ProcrastinateProvider>
-      <div className="min-h-screen flex flex-col">
-        <Header />
+      {/* ChapterProvider is outside ModelProvider because which room gets
+          loaded is a function of which chapter is active. */}
+      <ChapterProvider>
+        <div className="min-h-screen flex flex-col">
+          <Header />
 
-        {/* 3D Scene as a regular part of the page flow */}
-        <div style={{ height: '50vh', width: '100%' }}>
-          <ModelProvider>
-            <Scene3D />
-          </ModelProvider>
+          {/* 3D Scene as a regular part of the page flow */}
+          <div style={{ height: '50vh', width: '100%' }}>
+            <ModelProvider>
+              <Scene3D />
+            </ModelProvider>
+          </div>
+
+          <main className="flex-grow container mx-auto px-4 pt-6 pb-12">
+            {children}
+          </main>
+
+          <Footer />
         </div>
-
-        <main className="flex-grow container mx-auto px-4 pt-6 pb-12">
-          {children}
-        </main>
-
-        <Footer />
-      </div>
+      </ChapterProvider>
     </ProcrastinateProvider>
   )
 }

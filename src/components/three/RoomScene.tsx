@@ -6,20 +6,12 @@ import { useSharedModel } from './ModelContext'
 import { CameraRig } from './CameraRig'
 import { extractShots, resolveShots, type PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
+import { useChapter } from './ChapterContext'
 
-/**
- * Where the room sits in the scene. Shots authored inside the GLB are read from
- * world space, so they inherit this automatically — which is why a room can be
- * built anywhere in the .blend at any size and still frame correctly.
- */
-const ROOM_TRANSFORM = {
-  position: [0, -2, 0] as [number, number, number],
-  scale: 1.5,
-  rotation: [0, Math.PI / 4, 0] as [number, number, number],
-}
-
-// Camera shots now live in src/components/three/shots.ts: authored as cameras
-// inside the room GLB, with the old hand-tuned values kept as a fallback.
+// Where the room sits, which model to load and any pre-Blender fallback shots
+// all come from the active chapter now — see src/data/chapters.ts. Camera shots
+// themselves are authored as `shot_*` cameras inside the room GLB.
+//
 // The ~300 lines that used to sit here (a hardcoded position table, an
 // on-screen debug panel for copying coordinates out of the running site, and a
 // camera animator built on module-level mutable singletons) are gone.
@@ -120,6 +112,7 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
 
 export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   const { roomModel } = useSharedModel()
+  const { chapter } = useChapter()
   const roomRef = useRef<THREE.Group>(null)
   // Procrastinate mode is shared with the page content outside the Canvas, so
   // it lives in a context rather than in this component.
@@ -136,7 +129,10 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
     setAuthoredShots(extractShots(roomRef.current))
   }, [roomModel])
 
-  const shots = useMemo(() => resolveShots(authoredShots), [authoredShots])
+  const shots = useMemo(
+    () => resolveShots(authoredShots, chapter.fallbackShots),
+    [authoredShots, chapter.fallbackShots]
+  )
   const activeShot = shots[procrastinateMode ? 'procrastinate' : page]
 
   // A playing video needs frames just as much as a moving camera does.
@@ -153,9 +149,9 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
 
       <group
         ref={roomRef}
-        position={ROOM_TRANSFORM.position}
-        scale={ROOM_TRANSFORM.scale}
-        rotation={ROOM_TRANSFORM.rotation}
+        position={chapter.transform.position}
+        scale={chapter.transform.scale}
+        rotation={chapter.transform.rotation}
       >
         <primitive object={roomModel.scene} />
       </group>

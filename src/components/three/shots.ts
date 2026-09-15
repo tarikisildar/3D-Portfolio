@@ -33,8 +33,13 @@ const DEFAULT_FOV = 40
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0)
 
-/** Build a Shot from the eye/target/fov triples the room used to hardcode. */
-function shotFromLookAt(
+/**
+ * Build a Shot from an eye/target/fov triple.
+ *
+ * Only needed for chapters whose rooms predate the Blender-authored camera
+ * workflow; new rooms should carry `shot_*` cameras instead.
+ */
+export function shotFromLookAt(
   position: [number, number, number],
   target: [number, number, number],
   fov: number
@@ -52,20 +57,10 @@ function shotFromLookAt(
 }
 
 /**
- * Fallback shots for rooms that have no `shot_*` cameras authored in Blender
- * yet. These are the values that were hand-tuned through the old on-screen
- * debug panel, kept so the Munich room keeps working unchanged while the
- * authoring workflow moves into the .blend file.
+ * Last-resort framing: a wide view of the origin. Used only when a chapter
+ * supplies neither an authored nor a fallback shot for a section.
  */
-export const FALLBACK_SHOTS: Record<PageType, Shot> = {
-  home: shotFromLookAt([0.51, 0.18, -5.19], [-0.29, -2.48, 4.41], 35),
-  about: shotFromLookAt([0.79, -0.7, -1.68], [8.02, -0.87, 5.63], 40),
-  projects: shotFromLookAt([-1.39, -0.77, -1.27], [-5.23, -4.1, 7.34], 35),
-  cv: shotFromLookAt([-0.53, -1, -0.39], [-0.54, -2, -0.38], 40),
-  blog: shotFromLookAt([1.55, -1.37, 0.09], [-8.07, -2.33, -2.47], 50),
-  notFound: shotFromLookAt([0, 8, 12], [0, 0, 0], 70),
-  procrastinate: shotFromLookAt([-0.43, -1.06, -1.06], [-8.33, -2.71, 4.15], 70),
-}
+const SAFE_DEFAULT_SHOT: Shot = shotFromLookAt([0, 4, 8], [0, 0, 0], 50)
 
 /**
  * Pull camera shots out of a loaded room.
@@ -119,11 +114,24 @@ export function extractShots(root: THREE.Object3D): Partial<Record<PageType, Sho
 }
 
 /**
- * Shots authored in the room win; anything the room does not define falls back
- * to the hardcoded table, so a half-finished room is still navigable.
+ * Shots authored in the room win; anything it does not define falls back to the
+ * chapter's own table, and anything neither supplies falls back to a safe wide
+ * view — so a half-finished room is still navigable rather than throwing.
  */
 export function resolveShots(
-  authored: Partial<Record<PageType, Shot>>
+  authored: Partial<Record<PageType, Shot>>,
+  chapterFallbacks: Partial<Record<PageType, Shot>> = {}
 ): Record<PageType, Shot> {
-  return { ...FALLBACK_SHOTS, ...authored }
+  const merged = { ...chapterFallbacks, ...authored }
+  const safe = merged.home ?? SAFE_DEFAULT_SHOT
+
+  return {
+    home: merged.home ?? safe,
+    about: merged.about ?? safe,
+    projects: merged.projects ?? safe,
+    cv: merged.cv ?? safe,
+    blog: merged.blog ?? safe,
+    notFound: merged.notFound ?? safe,
+    procrastinate: merged.procrastinate ?? safe,
+  }
 }
