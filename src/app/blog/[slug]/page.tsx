@@ -15,17 +15,13 @@ export async function generateStaticParams() {
 // Set dynamic rendering to ensure we always get the latest content
 export const dynamic = 'force-dynamic'
 
-// Define props type with Promise for params
+// In the Next 15 App Router, params is always a Promise.
 type Props = {
-  params: Promise<{ slug: string }> | { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export default async function BlogPost({ params }: Props) {
-  // Await the params object to resolve it if it's a Promise
-  const resolvedParams = params instanceof Promise ? await params : params;
-
-  // Now use the resolved params
-  const { slug } = resolvedParams;
+  const { slug } = await params
 
   // Get blog post content
   const post = await getBlogPostBySlug(slug)

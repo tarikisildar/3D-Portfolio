@@ -117,14 +117,6 @@ export default function ProjectDetail() {
             <div className="mb-12">
               <h2 className="text-2xl font-semibold mb-4">Overview</h2>
               <p className="text-foreground/80 text-lg mb-6">{project.description}</p>
-
-              <div className="space-y-4">
-                {project.longDescription.map((paragraph, index) => (
-                  <p key={index} className="text-foreground/80">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
             </div>
 
             {/* Project Links */}
