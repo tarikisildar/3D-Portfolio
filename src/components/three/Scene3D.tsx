@@ -9,6 +9,8 @@ import { Loader } from '@react-three/drei'
 import { RoomScene } from './RoomScene'
 import type { PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
+import { ChapterTimeline } from './ChapterTimeline'
+import { MapTransition } from './MapTransition'
 
 // Map paths to page types
 const getPageTypeFromPath = (path: string): PageType => {
@@ -87,6 +89,11 @@ export default function Scene3D() {
       </Canvas>
 
       <ProcrastinateControls />
+      <ChapterTimeline />
+
+      {/* Sits above the canvas and the controls: while travelling between
+          chapters it is both the transition and the loading curtain. */}
+      <MapTransition />
 
       <Loader />
     </div>

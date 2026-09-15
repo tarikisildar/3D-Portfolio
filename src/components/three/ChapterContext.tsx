@@ -4,37 +4,58 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 import { chapters, getChapter, DEFAULT_CHAPTER_ID, type Chapter } from '@/data/chapters'
 
 type ChapterContextValue = {
-  /** The chapter currently on screen. */
+  /** The chapter currently rendered in the scene. */
   chapter: Chapter
   /** Every chapter, chronological — for the timeline UI. */
   all: Chapter[]
-  /** Switch chapters. Unknown ids fall back to the default rather than throwing. */
-  goTo: (id: string) => void
   /**
-   * True from the moment a switch is requested until the new room is on screen.
-   * The map transition will hang off this: it doubles as the loading curtain,
-   * which is what lets us unload one room before fetching the next instead of
-   * holding two in GPU memory at once.
+   * The chapter being travelled to, or null when settled.
+   *
+   * Requesting a switch deliberately does not change `chapter` straight away.
+   * If it did, the outgoing room would unload while still on screen and the
+   * viewer would watch it blink out. Instead the map transition covers the
+   * canvas first and then calls commit(), so the swap happens behind a curtain.
    */
-  switching: boolean
-  setSwitching: (v: boolean) => void
+  pending: Chapter | null
+  /** Request a switch. No-op if already there, or if a trip is under way. */
+  goTo: (id: string) => void
+  /** Called by the transition once the canvas is covered: performs the swap. */
+  commit: () => void
+  /** Called by the transition once the new room is visible: clears `pending`. */
+  finish: () => void
 }
 
 const ChapterContext = createContext<ChapterContextValue | null>(null)
 
 export function ChapterProvider({ children }: { children: React.ReactNode }) {
   const [id, setId] = useState(DEFAULT_CHAPTER_ID)
-  const [switching, setSwitching] = useState(false)
+  const [pendingId, setPendingId] = useState<string | null>(null)
 
-  const goTo = useCallback((next: string) => {
-    setId((current) => (current === next ? current : getChapter(next).id))
+  const goTo = useCallback(
+    (next: string) => {
+      const target = getChapter(next)
+      if (target.id === id) return
+      // Ignore a second request while one is already in flight.
+      setPendingId((current) => current ?? target.id)
+    },
+    [id]
+  )
+
+  const commit = useCallback(() => {
+    setPendingId((current) => {
+      if (current) setId(current)
+      return current
+    })
   }, [])
 
+  const finish = useCallback(() => setPendingId(null), [])
+
   const chapter = useMemo(() => getChapter(id), [id])
+  const pending = useMemo(() => (pendingId ? getChapter(pendingId) : null), [pendingId])
 
   const value = useMemo(
-    () => ({ chapter, all: chapters, goTo, switching, setSwitching }),
-    [chapter, goTo, switching]
+    () => ({ chapter, all: chapters, pending, goTo, commit, finish }),
+    [chapter, pending, goTo, commit, finish]
   )
 
   return <ChapterContext.Provider value={value}>{children}</ChapterContext.Provider>
