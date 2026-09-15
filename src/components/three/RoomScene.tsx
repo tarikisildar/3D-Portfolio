@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useSharedModel } from './ModelContext'
 import { usePathname } from 'next/navigation'
@@ -28,32 +27,20 @@ const ROOM_TRANSFORM = {
 
 interface RoomSceneProps {
   page: PageType;
-}
-
-/**
- * Holds the render loop open while something is actually moving.
- *
- * The Canvas runs frameloop="demand", which is right for a room that sits
- * still almost all the time. But "demand" alone cannot drive a multi-second
- * animation: calling invalidate() from inside useFrame does not reliably chain
- * frame to frame, and — worse — the delta handed to useFrame is wall-clock time
- * since the previous render, so after an idle pause the first frame of a move
- * would carry several seconds and skip straight to the end.
- *
- * Switching to "always" for the duration of a move gives normal ~16ms deltas,
- * then we drop back to "demand" and stop burning GPU on a static image.
- */
-function FrameloopController({ active }: { active: boolean }) {
-  const setFrameloop = useThree((s) => s.setFrameloop)
-  const invalidate = useThree((s) => s.invalidate)
-
-  useEffect(() => {
-    setFrameloop(active ? 'always' : 'demand')
-    // One last frame on the way down, so we settle on the final pose.
-    if (!active) invalidate()
-  }, [active, setFrameloop, invalidate])
-
-  return null
+  /**
+   * Reports whether anything in the scene needs continuous frames: a camera
+   * move in flight, or a video playing. Scene3D turns this into the Canvas
+   * `frameloop` prop.
+   *
+   * This has to travel up to the Canvas as a prop rather than being applied
+   * here with an imperative setFrameloop(). `frameloop` is a Canvas prop, so
+   * R3F re-applies it on every re-render — and navigating re-renders Scene3D.
+   * An imperative "always" therefore got stomped back to "demand" the moment
+   * you changed page mid-move, freezing the camera partway through with no way
+   * to recover: the effect that had set "always" never re-ran, because from its
+   * point of view nothing had changed.
+   */
+  onBusyChange?: (busy: boolean) => void;
 }
 
 // UI buttons for procrastination feature
@@ -281,7 +268,7 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
   )
 }
 
-export function RoomScene({ page }: RoomSceneProps) {
+export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   const { roomModel } = useSharedModel()
   const roomRef = useRef<THREE.Group>(null)
   const [procrastinateMode, setProcrastinateMode] = useState(false);
@@ -317,13 +304,16 @@ export function RoomScene({ page }: RoomSceneProps) {
   const shots = useMemo(() => resolveShots(authoredShots), [authoredShots])
   const activeShot = shots[procrastinateMode ? 'procrastinate' : page]
 
+  // A playing video needs frames just as much as a moving camera does.
+  const busy = cameraMoving || procrastinateMode
+  useEffect(() => {
+    onBusyChange?.(busy)
+  }, [busy, onBusyChange])
+
   if (!roomModel) return null;
 
   return (
     <>
-      {/* A playing video needs frames too, not just a moving camera. */}
-      <FrameloopController active={cameraMoving || procrastinateMode} />
-
       <CameraRig shot={activeShot} onMovingChange={setCameraMoving} />
 
       <group

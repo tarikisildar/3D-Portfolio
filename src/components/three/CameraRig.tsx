@@ -20,8 +20,6 @@ const ARC_MIN_DISTANCE = 2.5
 const ARC_RATIO = 0.22
 const MAX_ARC_HEIGHT = 2.2
 
-const WORLD_UP = new THREE.Vector3(0, 1, 0)
-
 /** Smootherstep: zero velocity *and* zero acceleration at both ends. */
 function ease(t: number): number {
   return t * t * t * (t * (t * 6 - 15) + 10)
@@ -79,7 +77,8 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
   const elapsed = useRef(0)
   const duration = useRef(0)
   const animating = useRef(false)
-  const arcHeight = useRef(0)
+  /** World-space height the arc should peak at, or null for a straight move. */
+  const apexY = useRef<number | null>(null)
 
   const from = useRef({
     position: new THREE.Vector3(),
@@ -117,10 +116,21 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
 
     const distance = from.current.position.distanceTo(shot.position)
 
-    arcHeight.current =
-      distance > ARC_MIN_DISTANCE
-        ? Math.min(distance * ARC_RATIO, MAX_ARC_HEIGHT)
-        : 0
+    // Arc on ground-plane travel only: a purely vertical reframe needs no lift.
+    const horizontal = Math.hypot(
+      shot.position.x - from.current.position.x,
+      shot.position.z - from.current.position.z
+    )
+
+    // An absolute apex, not an offset from the midpoint. Interrupting a move
+    // leaves the camera high up mid-arc, and measuring from the midpoint would
+    // make the next arc peak higher still — so repeatedly changing page during
+    // a transition used to walk the camera up and away from the room.
+    apexY.current =
+      horizontal > ARC_MIN_DISTANCE
+        ? Math.max(from.current.position.y, shot.position.y) +
+          Math.min(horizontal * ARC_RATIO, MAX_ARC_HEIGHT)
+        : null
 
     duration.current = Math.min(
       BASE_DURATION + distance * SECONDS_PER_UNIT,
@@ -145,19 +155,23 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     const raw = Math.min(elapsed.current / duration.current, 1)
     const t = ease(raw)
 
-    if (arcHeight.current > 0) {
-      // Quadratic Bezier with the control point lifted above the midpoint.
-      const mid = scratchMid.current
-        .addVectors(from.current.position, target.position)
-        .multiplyScalar(0.5)
-        .addScaledVector(WORLD_UP, arcHeight.current * 2)
+    if (apexY.current !== null) {
+      const p0 = from.current.position
+      const p1 = target.position
+      // A quadratic Bezier peaks at (P0 + 2C + P1) / 4, so solve for the
+      // control point that makes the curve actually reach apexY.
+      const control = scratchMid.current.set(
+        (p0.x + p1.x) / 2,
+        (4 * apexY.current - p0.y - p1.y) / 2,
+        (p0.z + p1.z) / 2
+      )
 
       const inv = 1 - t
       scratchPos.current
-        .copy(from.current.position)
+        .copy(p0)
         .multiplyScalar(inv * inv)
-        .addScaledVector(mid, 2 * inv * t)
-        .addScaledVector(target.position, t * t)
+        .addScaledVector(control, 2 * inv * t)
+        .addScaledVector(p1, t * t)
       camera.position.copy(scratchPos.current)
     } else {
       camera.position.lerpVectors(from.current.position, target.position, t)

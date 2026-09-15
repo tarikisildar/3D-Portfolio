@@ -23,6 +23,8 @@ export default function Scene3D() {
   const pathname = usePathname()
   // Initialize with the correct page type based on current path
   const [currentPage, setCurrentPage] = useState<PageType>(getPageTypeFromPath(pathname))
+  // True while the camera is moving or a video is playing; drives the frameloop.
+  const [busy, setBusy] = useState(false)
   const previousPathRef = useRef(pathname)
 
   // IMPORTANT: Don't use a key on the Canvas to prevent complete re-creation
@@ -48,12 +50,13 @@ export default function Scene3D() {
       <Canvas
         shadows
         dpr={[1, 1.5]} // Reduced to save memory
-        // The room is static the overwhelming majority of the time. "demand"
-        // renders only when something asks for it: CameraRig calls invalidate()
-        // while a move is in flight, and VideoScreen does the same while a video
-        // is playing. The previous "always" + an empty useFrame burned 60fps of
-        // GPU and battery to redraw an unchanging image.
-        frameloop="demand"
+        // The room is static the overwhelming majority of the time, so the loop
+        // idles on "demand" and only runs while RoomScene reports something
+        // moving. Driving this as a prop (rather than calling setFrameloop
+        // imperatively from inside the Canvas) is deliberate: R3F re-applies
+        // the prop on every re-render, so an imperative value would be silently
+        // reverted the next time navigation re-rendered this component.
+        frameloop={busy ? 'always' : 'demand'}
         gl={{
           antialias: true,
           alpha: true,
@@ -78,7 +81,7 @@ export default function Scene3D() {
 
         {/* Pass currentPage to RoomScene - this will trigger animation */}
         <Suspense fallback={null}>
-          <RoomScene page={currentPage} />
+          <RoomScene page={currentPage} onBusyChange={setBusy} />
         </Suspense>
       </Canvas>
 
