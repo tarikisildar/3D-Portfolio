@@ -11,6 +11,7 @@ import type { PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
 import { ChapterTimeline } from './ChapterTimeline'
 import { MapTransition } from './MapTransition'
+import { TravelSound } from './TravelSound'
 import { useChapter } from './ChapterContext'
 
 // Map paths to page types
@@ -91,7 +92,12 @@ export default function Scene3D() {
 
       <RoomUnderConstruction />
       <ProcrastinateControls />
-      <ChapterTimeline />
+      {/* Travel controls share one positioned row so the mute toggle sits
+          beside the timeline however many chapters there are. */}
+      <div className="absolute bottom-5 left-5 z-10 flex items-center gap-2">
+        <ChapterTimeline />
+        <TravelSound />
+      </div>
 
       {/* Sits above the canvas and the controls: while travelling between
           chapters it is both the transition and the loading curtain. */}

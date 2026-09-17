@@ -18,8 +18,7 @@ export function ChapterTimeline() {
   return (
     <nav
       aria-label="Places"
-      className="absolute bottom-5 left-5 z-10 flex items-center gap-1 rounded-full
-                 bg-black/35 p-1 backdrop-blur-sm"
+      className="flex items-center gap-1 rounded-full bg-black/35 p-1 backdrop-blur-sm"
     >
       {all.map((c) => {
         const current = c.id === chapter.id && !travelling
