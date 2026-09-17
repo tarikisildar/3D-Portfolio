@@ -64,6 +64,13 @@ const CLOSE_SPAN = 26
  */
 const ROUTE_PADDING = 155
 
+/**
+ * Vertical room a city label needs beyond its pin, in k-units (the same scale
+ * the labels themselves are drawn at). Covers the city name above and the year
+ * range below, with a little air.
+ */
+const LABEL_CLEARANCE = 46
+
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2)
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -71,25 +78,70 @@ const phase = (t: number, from: number, to: number) => clamp01((t - from) / (to 
 
 type Point = { x: number; y: number }
 
-/** Quadratic Bezier, bowed perpendicular to the route like a flight path. */
-function arcControl(a: Point, b: Point): Point {
+/**
+ * How a journey is drawn.
+ *
+ * Crossing a border is a flight; staying inside one is a train. Munich to
+ * Nuremberg really is an hour on the ICE, and Ankara really is a plane — the
+ * mode is decided by the chapters' countries rather than a lookup table, so new
+ * places get the right treatment automatically.
+ */
+type Mode = 'plane' | 'train'
+
+const MODE: Record<Mode, { bow: number; label: string }> = {
+  // Flight paths bow; rail follows the ground, give or take.
+  plane: { bow: 0.2, label: 'plane' },
+  train: { bow: 0.035, label: 'train' },
+}
+
+function journeyMode(from: Chapter, to: Chapter): Mode {
+  return from.country === to.country ? 'train' : 'plane'
+}
+
+/** Quadratic Bezier control point, bowed perpendicular to the route. */
+function control(a: Point, b: Point, bow: number): Point {
   const dx = b.x - a.x
   const dy = b.y - a.y
   const len = Math.hypot(dx, dy) || 1
-  const bow = len * 0.2
+  const off = len * bow
   return {
-    x: (a.x + b.x) / 2 - (dy / len) * bow,
-    y: (a.y + b.y) / 2 + (dx / len) * bow,
+    x: (a.x + b.x) / 2 - (dy / len) * off,
+    y: (a.y + b.y) / 2 + (dx / len) * off,
   }
 }
 
-function arcPoint(a: Point, b: Point, t: number): Point {
-  const c = arcControl(a, b)
+function bezier(a: Point, c: Point, b: Point, t: number): Point {
   const inv = 1 - t
   return {
     x: inv * inv * a.x + 2 * inv * t * c.x + t * t * b.x,
     y: inv * inv * a.y + 2 * inv * t * c.y + t * t * b.y,
   }
+}
+
+/**
+ * The travelled portion of the route, as an explicit polyline.
+ *
+ * Progressive reveal via stroke-dasharray would be simpler, but the rail
+ * styling already needs a dash pattern of its own for the sleepers — one path
+ * cannot do both. Emitting only the part that has been travelled leaves the
+ * dash array free.
+ */
+function partialPath(a: Point, c: Point, b: Point, t: number, steps = 64): string {
+  if (t <= 0) return ''
+  const n = Math.max(2, Math.ceil(steps * t))
+  let d = ''
+  for (let i = 0; i <= n; i++) {
+    const p = bezier(a, c, b, (i / n) * t)
+    d += `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`
+  }
+  return d
+}
+
+/** Heading of the route at t, in degrees, for pointing the vehicle. */
+function heading(a: Point, c: Point, b: Point, t: number): number {
+  const p0 = bezier(a, c, b, Math.max(0, t - 0.01))
+  const p1 = bezier(a, c, b, Math.min(1, t + 0.01))
+  return (Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180) / Math.PI
 }
 
 function prefersReducedMotion() {
@@ -109,18 +161,36 @@ export function MapTransition() {
   // shape or the cities end up outside the visible strip.
   const containerRef = useRef<HTMLDivElement>(null)
   const [aspect, setAspect] = useState(3)
+  /**
+   * Fraction of the scene hidden behind the site header.
+   *
+   * The header is fixed and the scene starts underneath it, so the top ~64px of
+   * the canvas is covered. Geometry placed there is drawn correctly and simply
+   * cannot be seen — which is what was eating the departure city's name on the
+   * long haul to Ankara. Measured rather than hardcoded so it survives the
+   * header changing height.
+   */
+  const [topInset, setTopInset] = useState(0)
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const measure = () => {
       const r = el.getBoundingClientRect()
-      if (r.width > 0 && r.height > 0) setAspect(r.width / r.height)
+      if (r.width <= 0 || r.height <= 0) return
+      setAspect(r.width / r.height)
+      const header = document.querySelector('header')?.getBoundingClientRect()
+      const covered = header ? Math.max(0, header.bottom - r.top) : 0
+      setTopInset(Math.min(0.45, covered / r.height))
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
-    return () => ro.disconnect()
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
   }, [])
 
   // Land is static; project it once.
@@ -206,10 +276,20 @@ export function MapTransition() {
         ? 1 - easeInOut(phase(progress, PHASE.lift, 1))
         : 1
 
-  // Vertical half-span when pulled back far enough to hold the whole route.
-  const routeHalfH = Math.abs(b.y - a.y) / 2 + ROUTE_PADDING
+  // Vertical half-span when pulled back far enough to hold the whole route —
+  // including the city labels, which sit above and below the pins.
+  //
+  // Label offsets are expressed in k, which is itself derived from the view
+  // height, so asking for clearance scales the view, which scales the
+  // clearance. Solving that directly: the labels need LABEL_CLEARANCE k-units,
+  // k is halfH/200, so they occupy a fixed *fraction* of the half-span and the
+  // rest has to fit in what remains. Without this the departure city's label
+  // was sliced off the top edge on the long haul to Ankara.
+  const labelFraction = LABEL_CLEARANCE / 200
+  const routeHalfH = (Math.abs(b.y - a.y) / 2 + ROUTE_PADDING) / (1 - labelFraction)
   const routeHalfW = Math.abs(b.x - a.x) / 2 + ROUTE_PADDING
-  const wideHalfH = Math.max(routeHalfH, routeHalfW / aspect)
+  // Everything has to fit in the band *below* the header, not the whole canvas.
+  const wideHalfH = Math.max(routeHalfH, routeHalfW / aspect) / (1 - topInset)
 
   const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
 
@@ -235,12 +315,19 @@ export function MapTransition() {
 
   const viewH = halfH * 2
   const viewW = viewH * aspect
-  const viewBox = `${focus.x - viewW / 2} ${focus.y - viewH / 2} ${viewW} ${viewH}`
+
+  // Bias the view upward so the content centres in the *visible* band rather
+  // than the full canvas, pushing it clear of the header.
+  const focusY = focus.y - halfH * topInset
+
+  const viewBox = `${focus.x - viewW / 2} ${focusY - viewH / 2} ${viewW} ${viewH}`
 
   const travel = easeInOut(phase(progress, PHASE.wide, PHASE.arrived))
-  const marker = arcPoint(a, b, travel)
-  const c = arcControl(a, b)
-  const route = `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`
+  const mode = journeyMode(origin, destination)
+  const ctrl = control(a, b, MODE[mode].bow)
+  const travelled = partialPath(a, ctrl, b, travel)
+  const marker = bezier(a, ctrl, b, travel)
+  const markerAngle = heading(a, ctrl, b, travel)
 
   // Keep strokes and labels a constant on-screen size as the map zooms.
   const k = viewH / 400
@@ -258,7 +345,7 @@ export function MapTransition() {
         {/* Sea */}
         <rect
           x={focus.x - viewW}
-          y={focus.y - viewH}
+          y={focusY - viewH}
           width={viewW * 2}
           height={viewH * 2}
           fill="#dbe4e0"
@@ -272,33 +359,88 @@ export function MapTransition() {
           ))}
         </g>
 
-        {/* Route, drawn progressively. pathLength normalises the dash maths so
-            it works regardless of how long the real path is. */}
-        <path
-          d={route}
-          fill="none"
-          stroke="#8c6a4f"
-          strokeWidth={3 * k}
-          strokeLinecap="round"
-          pathLength={1}
-          strokeDasharray={`${travel} 1`}
-        />
+        {/* The travelled route. Rail gets the classic two-tone hatching; a
+            flight path gets a dashed line. */}
+        {travelled && mode === 'train' ? (
+          <>
+            <path
+              d={travelled}
+              fill="none"
+              stroke="#5c4632"
+              strokeWidth={4.5 * k}
+              strokeLinecap="round"
+            />
+            <path
+              d={travelled}
+              fill="none"
+              stroke="#f2e3cb"
+              strokeWidth={2.2 * k}
+              strokeDasharray={`${5 * k} ${5 * k}`}
+            />
+          </>
+        ) : (
+          travelled && (
+            <path
+              d={travelled}
+              fill="none"
+              stroke="#8c6a4f"
+              strokeWidth={3 * k}
+              strokeLinecap="round"
+              strokeDasharray={`${7 * k} ${6 * k}`}
+            />
+          )
+        )}
 
         <CityPin p={a} chapter={origin} k={k} dimmed={travel > 0.5} />
         <CityPin p={b} chapter={destination} k={k} dimmed={travel < 0.5} />
 
         {travel > 0 && travel < 1 && (
-          <circle
-            cx={marker.x}
-            cy={marker.y}
-            r={6 * k}
-            fill="#ff6b6b"
-            stroke="#fff"
-            strokeWidth={2 * k}
-          />
+          <g transform={`translate(${marker.x} ${marker.y}) rotate(${markerAngle})`}>
+            {mode === 'plane' ? <PlaneGlyph k={k} /> : <TrainGlyph k={k} />}
+          </g>
         )}
       </svg>
     </div>
+  )
+}
+
+/**
+ * Vehicle glyphs, drawn as paths rather than emoji.
+ *
+ * Both point along +x and are rotated to the route's heading by the caller.
+ * Emoji would be one character each, but they render differently on every
+ * platform and cannot be recoloured to match the map.
+ */
+function PlaneGlyph({ k }: { k: number }) {
+  return (
+    <g transform={`scale(${k})`}>
+      <path
+        d="M13 0 L-3 6 L-6 5 L-2.5 0 L-6 -5 L-3 -6 Z"
+        fill="#ff6b6b"
+        stroke="#fff"
+        strokeWidth={1.4}
+        strokeLinejoin="round"
+      />
+    </g>
+  )
+}
+
+function TrainGlyph({ k }: { k: number }) {
+  return (
+    <g transform={`scale(${k})`}>
+      <rect
+        x={-7}
+        y={-4.2}
+        width={14}
+        height={8.4}
+        rx={2.6}
+        fill="#ff6b6b"
+        stroke="#fff"
+        strokeWidth={1.4}
+      />
+      {/* Windscreen, so it reads as facing forwards. */}
+      <rect x={2.4} y={-2.2} width={2.6} height={4.4} rx={0.8} fill="#fff" opacity={0.9} />
+    </g>
   )
 }
 

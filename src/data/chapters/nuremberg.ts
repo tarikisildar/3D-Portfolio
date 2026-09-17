@@ -4,6 +4,7 @@ import munichAbout from './munich.about'
 export const NUREMBERG: Chapter = {
   id: 'nuremberg',
   label: 'Nuremberg',
+  country: 'DE',
   city: 'Nuremberg',
   coords: [49.4521, 11.0767],
   period: ['2025', null],

@@ -5,9 +5,10 @@ import munichAbout from './munich.about'
 export const MUNICH: Chapter = {
   id: 'munich',
   label: 'Munich',
+  country: 'DE',
   city: 'Munich',
   coords: [48.1351, 11.582],
-  period: ['2022', '2025'],
+  period: ['2021', '2025'],
   model: '/models/rooms/munich.glb',
   transform: {
     position: [0, -2, 0],

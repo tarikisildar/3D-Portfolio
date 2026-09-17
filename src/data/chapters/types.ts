@@ -44,6 +44,11 @@ export type Chapter = {
   label: string
   /** City, for the map transition between chapters. */
   city: string
+  /**
+   * ISO country code. Journeys within one country are drawn as a train ride,
+   * journeys across a border as a flight.
+   */
+  country: string
   /** [latitude, longitude] — drives the flight path on the map. */
   coords: [number, number]
   /** Inclusive start, and end (null while it is the current chapter). */

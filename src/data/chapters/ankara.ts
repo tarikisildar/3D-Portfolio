@@ -9,9 +9,10 @@ import type { Chapter } from './types'
 export const ANKARA: Chapter = {
   id: 'ankara',
   label: 'Ankara',
+  country: 'TR',
   city: 'Ankara',
   coords: [39.9334, 32.8597],
-  period: ['2018', '2022'],
+  period: ['1999', '2021'],
 
   // No `model` yet — the room is still being built.
 
