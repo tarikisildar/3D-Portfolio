@@ -1,3 +1,4 @@
+import { ANKARA } from './ankara'
 import { MUNICH } from './munich'
 import { NUREMBERG } from './nuremberg'
 
@@ -9,7 +10,7 @@ export type { Chapter, ChapterContent } from './types'
  *
  * Adding a place: see docs/adding-a-place.md.
  */
-export const chapters = [MUNICH, NUREMBERG]
+export const chapters = [ANKARA, MUNICH, NUREMBERG]
 
 /**
  * The chapter shown on first load: always the most recent one.

@@ -105,6 +105,10 @@ export function ModelProvider({ children }: { children: React.ReactNode }) {
     setScene(null)
     setError(null)
 
+    // A chapter whose room has not been built yet. Nothing to fetch, and not an
+    // error — Scene3D shows an under-construction panel instead.
+    if (!url) return
+
     void (async () => {
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {

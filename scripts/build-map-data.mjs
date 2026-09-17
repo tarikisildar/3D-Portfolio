@@ -25,8 +25,11 @@ const BASE =
   'https://raw.githubusercontent.com/johan/world.geo.json/master/countries'
 
 /**
- * Germany plus enough of its neighbours to fill the frame. Without them the
- * country floats in a void and stops reading as a map.
+ * Every country the journeys cross, plus enough neighbours to fill the frame.
+ * Without them a country floats in a void and stops reading as a map.
+ *
+ * The span reaches Turkey because the timeline starts in Ankara: a chapter
+ * whose country is missing would fly to blank sea.
  */
 const COUNTRIES = [
   { code: 'DEU', name: 'Germany', home: true },
@@ -44,10 +47,21 @@ const COUNTRIES = [
   { code: 'SVK', name: 'Slovakia' },
   { code: 'HUN', name: 'Hungary' },
   { code: 'HRV', name: 'Croatia' },
+  // Reaching south-east towards Ankara.
+  { code: 'TUR', name: 'Turkey', home: true },
+  { code: 'GRC', name: 'Greece' },
+  { code: 'BGR', name: 'Bulgaria' },
+  { code: 'ROU', name: 'Romania' },
+  { code: 'SRB', name: 'Serbia' },
+  { code: 'BIH', name: 'Bosnia and Herzegovina' },
+  { code: 'MKD', name: 'North Macedonia' },
+  { code: 'ALB', name: 'Albania' },
+  { code: 'MNE', name: 'Montenegro' },
+  { code: 'UKR', name: 'Ukraine' },
 ]
 
-/** Drop rings far from central Europe — overseas territories, small islands. */
-const KEEP_BOUNDS = { minLng: -6, maxLng: 26, minLat: 42, maxLat: 58 }
+/** Drop rings outside the window we render — overseas territories, far islands. */
+const KEEP_BOUNDS = { minLng: -6, maxLng: 46, minLat: 34, maxLat: 58 }
 
 const round = (n) => Math.round(n * 1000) / 1000
 

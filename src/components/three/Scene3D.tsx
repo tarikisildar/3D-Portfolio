@@ -11,6 +11,7 @@ import type { PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
 import { ChapterTimeline } from './ChapterTimeline'
 import { MapTransition } from './MapTransition'
+import { useChapter } from './ChapterContext'
 
 // Map paths to page types
 const getPageTypeFromPath = (path: string): PageType => {
@@ -88,6 +89,7 @@ export default function Scene3D() {
         </Suspense>
       </Canvas>
 
+      <RoomUnderConstruction />
       <ProcrastinateControls />
       <ChapterTimeline />
 
@@ -101,6 +103,43 @@ export default function Scene3D() {
 }
 
 /**
+ * Stands in for the 3D view while a chapter's room is still being built.
+ *
+ * A chapter can exist on the timeline before its room does — the place and the
+ * dates are real even if the model is not — so this says so plainly rather than
+ * leaving an empty canvas that reads as a failed load.
+ */
+function RoomUnderConstruction() {
+  const { chapter, pending } = useChapter()
+
+  // Stay hidden mid-journey; the map is covering the canvas anyway, and this
+  // appearing underneath would flash as the curtain lifts.
+  if (chapter.model || pending) return null
+
+  const [from, to] = chapter.period
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+      <div className="px-6 text-center">
+        <div
+          className="mx-auto mb-4 h-px w-16"
+          style={{ background: 'rgba(58,47,40,0.25)' }}
+        />
+        <p
+          className="text-lg font-semibold sm:text-xl"
+          style={{ color: '#3a2f28' }}
+        >
+          {chapter.city} is still under construction
+        </p>
+        <p className="mt-1 font-mono text-xs" style={{ color: '#6b5949' }}>
+          {from}–{to ?? 'now'} · room not built yet
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/**
  * The in-scene buttons, as ordinary DOM overlaying the canvas.
  *
  * These used to be built with document.createElement and ~150 lines of inline
@@ -109,6 +148,10 @@ export default function Scene3D() {
  */
 function ProcrastinateControls() {
   const { active, start, exit, nextVideo } = useProcrastinate()
+  const { chapter } = useChapter()
+
+  // The video plays on a monitor in the room. No room, no button.
+  if (!chapter.model) return null
 
   const base =
     'px-4 py-2 rounded-md text-white text-sm font-semibold shadow-md transition-all ' +

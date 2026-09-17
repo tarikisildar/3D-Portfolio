@@ -172,7 +172,33 @@ export const chapters: Chapter[] = [MUNICH, NUREMBERG, BERLIN]
 ```
 
 Keep the array chronological — the timeline and the map flight both use that
-order.
+order. The **last** entry is the default chapter: a visitor arriving cold meets
+where you are now and travels back.
+
+### Adding a place before its room exists
+
+Omit `model`. The chapter appears on the timeline with its real city and dates,
+the map still flies there, and the 3D panel shows an under-construction note
+instead of a room. Ankara is set up this way.
+
+```ts
+export const ANKARA: Chapter = {
+  id: 'ankara',
+  // ...
+  // no `model` yet
+  sections: ['home', 'projects', 'blog'],   // shared sections still work
+  content: { home: { /* ... */ } },         // no about/cv until written
+}
+```
+
+Two things it handles for you: no model is fetched, and the transition treats
+the chapter as ready immediately rather than waiting for a load that will never
+arrive.
+
+**If the new place is in a country the map doesn't cover yet**, add it to
+`COUNTRIES` in `scripts/build-map-data.mjs` (and widen `KEEP_BOUNDS` if needed),
+then re-run `node scripts/build-map-data.mjs`. Otherwise the flight lands on
+blank sea.
 
 **`sections`** is the list of sections this chapter offers. Not every chapter
 needs all five: a student flat might have no CV corner, an early chapter might

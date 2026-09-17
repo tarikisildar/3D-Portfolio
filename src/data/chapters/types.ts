@@ -48,8 +48,13 @@ export type Chapter = {
   coords: [number, number]
   /** Inclusive start, and end (null while it is the current chapter). */
   period: [string, string | null]
-  /** URL of the optimized room model. */
-  model: string
+  /**
+   * URL of the optimized room model. Omit while the room is still being built:
+   * the scene shows a "under construction" panel instead, and the transition
+   * treats the chapter as ready immediately rather than waiting for a load that
+   * will never arrive.
+   */
+  model?: string
   /**
    * Where the room sits in the scene. Shots authored inside the GLB are read
    * in world space, so they inherit this automatically — which is why a room

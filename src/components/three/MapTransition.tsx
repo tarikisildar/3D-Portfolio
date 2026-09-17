@@ -148,10 +148,13 @@ export function MapTransition() {
 
   const originRef = useRef<Chapter | null>(null)
   const committedRef = useRef(false)
-  const roomReadyRef = useRef(false)
-  roomReadyRef.current = roomModel !== null
 
   const active = pending !== null
+
+  // A chapter whose room is not built yet never produces a model, so waiting on
+  // one would stall the flight at HOLD_AT forever. Treat it as ready.
+  const roomReadyRef = useRef(false)
+  roomReadyRef.current = roomModel !== null || !pending?.model
 
   useEffect(() => {
     if (!active) return
