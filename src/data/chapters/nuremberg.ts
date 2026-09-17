@@ -21,7 +21,7 @@ export const NUREMBERG: Chapter = {
 
   content: {
     home: {
-      greeting: "Hi, I'm Tarik",
+      greeting: "Hi, I'm Tarik2",
       // TODO: your words. This is the one line that most obviously belongs to
       // the new place — it currently still describes the Munich room.
       roomBlurb:
