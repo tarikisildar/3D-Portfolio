@@ -21,7 +21,7 @@ export const MUNICH: Chapter = {
     home: {
       greeting: "Hi, I'm Tarik",
       roomBlurb:
-        "Welcome to my virtual room! It's an exact replica of the mancave I lived in for the last 2 years in Munich.",
+        "Welcome to my virtual room! It's an exact replica of the mancave I lived in for 2 years in Munich.",
       aboutPreview: [
         "I'm a Computer Graphics and Robotics specialist with an M.Sc. from the Technical University of Munich, where I've focused on real-time rendering, autonomous systems, and AI-powered solutions.",
         "Over the years, I've worked on exciting projects ranging from autonomous vehicle systems to real-time visualization tools, blending technical expertise with creativity to solve complex challenges.",

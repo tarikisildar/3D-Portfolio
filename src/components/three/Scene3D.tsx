@@ -72,17 +72,9 @@ export default function Scene3D() {
       >
         <color attach="background" args={['#f5e5d3']} />
 
-        {/* The only lighting in the scene. Ambient is kept low enough that the
-            directional light still does the shading work and the room reads as
-            having form. */}
-        <ambientLight intensity={0.75} />
-        <directionalLight
-          castShadow
-          position={[10, 10, 5]}
-          intensity={1.7}
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
+        {/* Lighting lives in RoomScene: the key light's shadow frustum has to be
+            sized to the room it is lighting, and rooms differ by a factor of
+            three in extent. */}
 
         {/* Pass currentPage to RoomScene - this will trigger animation */}
         <Suspense fallback={null}>

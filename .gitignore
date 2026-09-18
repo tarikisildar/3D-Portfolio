@@ -50,3 +50,6 @@ models-src/**/backups/
 
 # Generated apartment reference material (kept locally, not source)
 /output/
+
+# lighting-lab render output
+/.lighting-lab/

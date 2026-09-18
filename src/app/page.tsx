@@ -93,7 +93,7 @@ export default function Home() {
                 <h3 className="text-xl font-semibold">Take a Tour</h3>
               </div>
               <p className="text-foreground/80">
-                Navigate through the tabs above to explore different corners of my space. Each section reveals a new perspective of my digital home.
+                Navigate through the tabs above to explore different corners of my space. Each section reveals a new perspective of my digital home. You may also press the cities in the timeline to travel through time and visit old Tariks.
               </p>
             </div>
 

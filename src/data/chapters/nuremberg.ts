@@ -22,7 +22,7 @@ export const NUREMBERG: Chapter = {
 
   content: {
     home: {
-      greeting: "Hi, I'm Tarik2",
+      greeting: "Hey, it's Tarik",
       // TODO: your words. This is the one line that most obviously belongs to
       // the new place — it currently still describes the Munich room.
       roomBlurb:
@@ -47,7 +47,6 @@ export const NUREMBERG: Chapter = {
     },
   },
 
-  // No fallbackShots on purpose. With no `shot_*` cameras in the GLB yet, the
-  // scene auto-frames from the room's bounds. Authoring cameras in Blender will
-  // override that — do not hand-tune numbers here.
+  // No fallbackShots on purpose. The five `shot_*` cameras are authored in
+  // rooms.blend and travel with the GLB when Cameras is enabled on export.
 }

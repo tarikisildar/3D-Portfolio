@@ -8,6 +8,7 @@ import { CameraRig } from './CameraRig'
 import { extractShots, deriveShots, resolveShots, type PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
 import { useChapter } from './ChapterContext'
+import { RoomLighting } from './RoomLighting'
 
 // Where the room sits, which model to load and any pre-Blender fallback shots
 // all come from the active chapter now — see src/data/chapters.ts. Camera shots
@@ -121,6 +122,9 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   // Shots authored inside the room, once we have been able to read them out.
   const [authoredShots, setAuthoredShots] = useState({})
   const [derivedShots, setDerivedShots] = useState({})
+  // World-space extent of the room, so the key light's shadow frustum can be
+  // sized to it rather than to a guess.
+  const [bounds, setBounds] = useState<{ centre: THREE.Vector3; radius: number } | null>(null)
   const [cameraMoving, setCameraMoving] = useState(false)
   // Auto-framing needs the real viewport shape: the scene is a wide letterbox.
   const aspect = useThree((s) => s.size.width / s.size.height)
@@ -134,6 +138,10 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
     // Auto-framing from the room's own bounds, so a room with no authored
     // cameras is still viewable rather than inheriting another room's framing.
     setDerivedShots(deriveShots(roomRef.current, aspect))
+
+    const box = new THREE.Box3().setFromObject(roomRef.current)
+    const sphere = box.getBoundingSphere(new THREE.Sphere())
+    setBounds({ centre: sphere.center.clone(), radius: sphere.radius })
   }, [roomModel, aspect])
 
   const shots = useMemo(
@@ -154,6 +162,8 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
     <>
       <CameraRig shot={activeShot} onMovingChange={setCameraMoving} />
 
+      {bounds && <RoomLighting centre={bounds.centre} radius={bounds.radius} />}
+
       <group
         ref={roomRef}
         position={chapter.transform.position}
@@ -162,10 +172,6 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
       >
         <primitive object={roomModel.scene} />
       </group>
-
-      {/* Lighting lives in Scene3D. There used to be a second ambientLight
-          here, which stacked with that one to 1.5 total and washed out the
-          directional light, leaving every surface in the room shadeless. */}
 
       <VideoScreen active={procrastinateMode} sequence={sequence} />
     </>

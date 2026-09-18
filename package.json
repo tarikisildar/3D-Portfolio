@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "models": "node scripts/optimize-models.mjs",
-    "models:check": "node scripts/visual-check.mjs"
+    "models:check": "node scripts/visual-check.mjs",
+    "lighting": "node scripts/lighting-lab.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^15.4.1",

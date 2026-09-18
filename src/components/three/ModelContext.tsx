@@ -58,6 +58,10 @@ function prepareScene(scene: THREE.Group) {
   scene.traverse((child) => {
     if (child instanceof THREE.Mesh) {
       child.frustumCulled = true
+      // Opting in is required: the Canvas enables the shadow map and the key
+      // light casts, but three ignores both unless the meshes say so.
+      child.castShadow = true
+      child.receiveShadow = true
       // The room never moves, so per-frame matrix recomputation is wasted work.
       child.matrixAutoUpdate = false
       child.updateMatrix()
