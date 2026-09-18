@@ -16,6 +16,7 @@
 
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { getBounds } from '@gltf-transform/core';
 import {
   dedup,
   prune,
@@ -66,6 +67,47 @@ function stripIncidentalNames() {
   };
 }
 
+/**
+ * Flags objects wildly out of scale with the rest of the room.
+ *
+ * A single asset imported without its transform applied — a calculator 90
+ * metres wide, a prop parked 300 metres away — inflates the scene's bounding
+ * box, and since rooms with no authored cameras are framed from those bounds,
+ * the camera retreats far enough to fit the outlier and the actual room becomes
+ * a speck. That is invisible in Blender and baffling in the browser, so it is
+ * worth saying out loud here.
+ *
+ * Measured against the median object size rather than an absolute threshold, so
+ * it holds whatever units a scene is built in.
+ */
+function findOutliers(document) {
+  const scene = document.getRoot().listScenes()[0];
+  if (!scene) return { outliers: [], median: 0 };
+
+  const objects = [];
+  for (const node of scene.listChildren()) {
+    const b = getBounds(node);
+    if (!Number.isFinite(b.min[0])) continue;
+    const size = Math.max(
+      b.max[0] - b.min[0],
+      b.max[1] - b.min[1],
+      b.max[2] - b.min[2]
+    );
+    const distance = Math.max(...b.max.map(Math.abs), ...b.min.map(Math.abs));
+    objects.push({ name: node.getName() || '(unnamed)', size, distance });
+  }
+  if (objects.length < 8) return { outliers: [], median: 0 };
+
+  const sorted = [...objects].map((o) => o.size).sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)] || 1;
+
+  const outliers = objects
+    .filter((o) => o.size > median * 12 || o.distance > median * 40)
+    .sort((a, b) => b.distance - a.distance);
+
+  return { outliers, median };
+}
+
 async function analyze(document) {
   const root = document.getRoot();
   let primitives = 0;
@@ -113,6 +155,14 @@ async function optimize(srcPath, outPath) {
   const document = await io.read(srcPath);
   const before = await analyze(document);
   const srcBytes = (await stat(srcPath)).size;
+
+  // Measured before the pipeline runs: stripIncidentalNames() clears the names
+  // that make this report useful, and flatten/join dissolve the per-object
+  // hierarchy it walks.
+  const diagnostics = {
+    bounds: getBounds(document.getRoot().listScenes()[0]),
+    ...findOutliers(document),
+  };
 
   await document.transform(
     // 1. Collapse byte-identical materials, meshes, textures, accessors. The
@@ -183,6 +233,34 @@ async function optimize(srcPath, outPath) {
     .getRoot()
     .listNodes()
     .filter((n) => (n.getName() || '').startsWith('shot_'));
+
+  const sceneBounds = diagnostics.bounds;
+  if (Number.isFinite(sceneBounds.min[0])) {
+    const dims = sceneBounds.max.map((v, i) => (v - sceneBounds.min[i]).toFixed(1));
+    console.log(`    extent: ${dims.join(' x ')} units`);
+  }
+
+  const { outliers, median } = diagnostics;
+  if (outliers.length > 0) {
+    console.log(
+      `\n    !! ${outliers.length} object(s) far out of scale with the rest of the room.\n` +
+        `       Typical object here is about ${median.toFixed(2)} units across. These are not:\n`
+    );
+    for (const o of outliers.slice(0, 12)) {
+      console.log(
+        `         ${o.name.slice(0, 34).padEnd(36)} ${o.size.toFixed(1)} units across, ` +
+          `${o.distance.toFixed(0)} from origin`
+      );
+    }
+    if (outliers.length > 12) console.log(`         ...and ${outliers.length - 12} more`);
+    console.log(
+      `\n       Almost always an imported asset whose transform was never applied.\n` +
+        `       In Blender: select it, Object > Apply > All Transforms, and scale it\n` +
+        `       to match the room. Rooms without authored cameras are framed from\n` +
+        `       these bounds, so one stray object pushes the camera far enough back\n` +
+        `       that the room itself disappears.\n`
+    );
+  }
 
   if (shotNodes.length === 0) {
     console.log(
