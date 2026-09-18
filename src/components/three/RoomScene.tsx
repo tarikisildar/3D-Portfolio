@@ -8,6 +8,7 @@ import { CameraRig } from './CameraRig'
 import { extractShots, deriveShots, resolveShots, type PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
 import { useChapter } from './ChapterContext'
+import type { Chapter } from '@/data/chapters'
 import { RoomLighting } from './RoomLighting'
 
 // Where the room sits, which model to load and any pre-Blender fallback shots
@@ -36,24 +37,40 @@ interface RoomSceneProps {
   onBusyChange?: (busy: boolean) => void;
 }
 
-const VIDEO_SOURCES = [
-  '/videos/hoffman.mp4',
-  '/videos/office.mp4',
-  '/videos/shorts.mp4',
-  '/videos/radiohead.mp4',
-]
-
 /**
- * Plays a video on the monitor while procrastinate mode is on.
+ * Plays a video on the room's screen while procrastinate mode is on.
+ *
+ * Both the playlist and where it plays are per chapter: each era had its own
+ * distractions, and the screen sits somewhere different in every room.
+ *
+ * Two ways to place it, in order of preference:
+ *
+ *  - `screen`: a mesh named `screen_procrastinate` modelled into the room. Its
+ *    material is swapped for the video, so the picture lands on the real screen
+ *    with the UVs it was authored with.
+ *  - `overlay`: literal numbers on the chapter, used to float a quad in front of
+ *    the monitor. Munich predates screen anchors and is the only room using it.
  *
  * `sequence` advances on each "Next Video" press and steps through the list
  * rather than picking at random, which used to mean Next could hand you the
  * same clip again.
  */
-function VideoScreen({ active, sequence }: { active: boolean; sequence: number }) {
+function VideoScreen({
+  active,
+  sequence,
+  sources,
+  screen,
+  overlay,
+}: {
+  active: boolean
+  sequence: number
+  sources: string[]
+  screen: THREE.Object3D | null
+  overlay?: Chapter['screen']
+}) {
   const [videoTexture, setVideoTexture] = useState<THREE.VideoTexture | null>(null)
   // Random starting point, chosen once, so the first clip is not always the same.
-  const [offset] = useState(() => Math.floor(Math.random() * VIDEO_SOURCES.length))
+  const [offset] = useState(() => Math.floor(Math.random() * sources.length))
 
   // One effect owns the whole lifecycle. The previous version had three
   // overlapping effects that each called a shared loadVideo(), and the one that
@@ -61,7 +78,7 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
   // while calling setVideoTexture inside — so every texture swap tore the
   // element down and rebuilt it, restarting playback.
   useEffect(() => {
-    if (!active) return
+    if (!active || sources.length === 0) return
 
     const video = document.createElement('video')
     video.crossOrigin = 'anonymous'
@@ -70,11 +87,14 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
     // Autoplay policies only allow muted starts; we unmute shortly after.
     video.muted = true
     video.volume = 0
-    video.src = VIDEO_SOURCES[(offset + sequence) % VIDEO_SOURCES.length]
+    video.src = sources[(offset + sequence) % sources.length]
 
     const texture = new THREE.VideoTexture(video)
     texture.minFilter = THREE.LinearFilter
     texture.magFilter = THREE.LinearFilter
+    texture.colorSpace = THREE.SRGBColorSpace
+    // Authored glTF UVs use a top-left image origin.
+    texture.flipY = !screen
 
     setVideoTexture(texture)
     video.play().catch((err) => console.error('Error playing video:', err))
@@ -95,16 +115,34 @@ function VideoScreen({ active, sequence }: { active: boolean; sequence: number }
     // While procrastinate mode is on, RoomScene reports "busy" upward and the
     // Canvas runs frameloop="always" — that is what pushes new video frames
     // into the texture.
-  }, [active, sequence, offset])
+  }, [active, sequence, offset, screen, sources])
 
-  if (!active || !videoTexture) return null
+  useEffect(() => {
+    if (!screen || !active || !videoTexture) return
+    const material = new THREE.MeshBasicMaterial({ map: videoTexture, toneMapped: false })
+    const originals: Array<[THREE.Mesh, THREE.Material | THREE.Material[]]> = []
+    screen.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        originals.push([object, object.material])
+        object.material = material
+      }
+    })
+    return () => {
+      for (const [mesh, original] of originals) mesh.material = original
+      material.dispose()
+    }
+  }, [screen, active, videoTexture])
 
-  // Position matched to the monitor face in the room model.
+  // The anchored path has already swapped the material above; nothing to draw.
+  if (!active || !videoTexture || screen || !overlay) return null
+
+  // Fallback for rooms with no `screen_procrastinate` mesh: float a quad where
+  // the chapter says the monitor is.
   return (
     <mesh
-      position={[-1.243, -1.155, -0.86]}
-      rotation={[0, Math.PI * 0.699, 0]}
-      scale={[0.61, 0.365, 0.01]}
+      position={overlay.position}
+      rotation={overlay.rotation}
+      scale={[overlay.size[0], overlay.size[1], 1]}
     >
       <planeGeometry args={[1, 1]} />
       <meshBasicMaterial map={videoTexture} toneMapped={false} />
@@ -148,6 +186,10 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
     () => resolveShots(authoredShots, chapter.fallbackShots, derivedShots),
     [authoredShots, chapter.fallbackShots, derivedShots]
   )
+  const videoScreen = useMemo(
+    () => roomModel?.scene.getObjectByName('screen_procrastinate') ?? null,
+    [roomModel]
+  )
   const activeShot = shots[procrastinateMode ? 'procrastinate' : page]
 
   // A playing video needs frames just as much as a moving camera does.
@@ -173,7 +215,13 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
         <primitive object={roomModel.scene} />
       </group>
 
-      <VideoScreen active={procrastinateMode} sequence={sequence} />
+      <VideoScreen
+        active={procrastinateMode}
+        sequence={sequence}
+        sources={chapter.videos ?? []}
+        screen={videoScreen}
+        overlay={chapter.screen}
+      />
     </>
   );
 }

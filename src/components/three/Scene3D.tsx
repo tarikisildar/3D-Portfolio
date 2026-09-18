@@ -148,8 +148,9 @@ function ProcrastinateControls() {
   const { active, start, exit, nextVideo } = useProcrastinate()
   const { chapter } = useChapter()
 
-  // The video plays on a monitor in the room. No room, no button.
-  if (!chapter.model) return null
+  // The video plays on a screen in the room, from this chapter's own playlist.
+  // No room or no clips means there is nothing to procrastinate with.
+  if (!chapter.model || !chapter.videos?.length) return null
 
   const base =
     'px-4 py-2 rounded-md text-white text-sm font-semibold shadow-md transition-all ' +

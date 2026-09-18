@@ -72,6 +72,26 @@ export type Chapter = {
   }
   /** Sections this chapter offers. Order is the order they appear in nav. */
   sections: PageType[]
+  /**
+   * Clips that play on the screen in procrastinate mode — what I was wasting
+   * time on in this era. Omit (or leave empty) and the feature is switched off
+   * for this chapter.
+   */
+  videos?: string[]
+  /**
+   * Where the video plays, for rooms with no `screen_*` anchor modelled in
+   * Blender. Prefer the anchor: lay a plane over the screen face and name it
+   * `screen_tv`, and the placement is read from the model. This exists for
+   * Munich, which predates that.
+   *
+   * Rotation is in radians; size is the width and height of the screen face in
+   * model units, before the chapter transform scales it.
+   */
+  screen?: {
+    position: [number, number, number]
+    rotation: [number, number, number]
+    size: [number, number]
+  }
   /** The writing for this era. */
   content: ChapterContent
   /**

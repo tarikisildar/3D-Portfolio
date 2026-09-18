@@ -11,10 +11,11 @@ Rough time: an afternoon for the room, ten minutes for the wiring.
 
 These are the ones that cost rework if you get them wrong.
 
-**Walls at ~1.3 units, not full height.** Munich's are 1.29, Nuremberg's 1.38.
-Half-height walls are what let the camera sit outside the room and look in over
-the top. Build 2.6m walls and the camera will be blocked in every shot, and
-you'll end up cutting them down after the place is furnished.
+**Choose wall heights for the authored cameras.** Munich uses ~1.3m walls for
+its dollhouse views. Nuremberg now uses 2.6m exterior walls to enclose its
+eye-level shots, with outward-facing surfaces removed and backface culling
+enabled. Its interior partitions remain 1.3m. Keep this distinction when
+editing Nuremberg; preview every `shot_*` camera after changing walls.
 
 **Walls single-sided, normals facing into the room.** From outside they're then
 backface-culled and invisible; from inside they're solid. This is the other half
@@ -84,7 +85,7 @@ For each section the chapter offers:
 
 1. `Add → Camera`
 2. Name it **`shot_<section>`** — `shot_home`, `shot_about`, `shot_projects`,
-   `shot_cv`, `shot_blog`
+   `shot_cv`, `shot_blog`, and `shot_procrastinate`
 3. Fly the viewport to the framing you want, then **`Ctrl+Alt+Numpad0`** to snap
    the camera there
 4. **`Numpad0`** to look through it — this is exactly what the site will show,
@@ -97,8 +98,46 @@ copying coordinates, no reload loop.
 **Put the camera where a person would stand.** Munich's shots work because
 they're at eye level among the furniture, not hovering above it.
 
+Nuremberg deliberately mixes a wider, elevated `shot_home` overview with
+detail shots: the CV clipboard, the TV meme viewed from the sofa, and the
+French-balcony chairs. Keep `shot_about` at its approved dining-room angle.
+
+For Procrastinate, frame the computer with `shot_procrastinate` and name its
+separate, UV-mapped display mesh `screen_procrastinate`. The website swaps only
+that mesh's material for video during playback, then restores its original
+wallpaper. The optimizer preserves both names. Keep the screen in the exported
+room collection so it follows the chapter's position, rotation, and scale.
+
 You only need shots for the sections this chapter declares (step 5). A chapter
 with three sections needs three cameras.
+
+---
+
+### The procrastinate screen
+
+Optional. If the room has a screen you want video playing on:
+
+1. Model a plane over the screen face (or use the screen mesh itself)
+2. Name it **`screen_procrastinate`**
+3. Add a **`shot_procrastinate`** camera framing it
+
+At runtime the site swaps that mesh's material for the video, so the picture
+lands on the real screen using the UVs you authored — no floating quad, and it
+follows the room wherever it sits.
+
+Then give the chapter a playlist:
+
+```ts
+videos: [
+  '/videos/hoffman.mp4',
+  '/videos/office.mp4',
+],
+```
+
+No `videos` (or an empty list) and the Procrastinate button simply doesn't
+appear for that chapter. Munich has no `screen_procrastinate` — it predates
+this and positions a quad from literal numbers in `Chapter.screen` instead.
+Don't copy that for a new room; model the anchor.
 
 ---
 

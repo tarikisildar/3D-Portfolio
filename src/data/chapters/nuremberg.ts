@@ -20,6 +20,19 @@ export const NUREMBERG: Chapter = {
   },
   sections: ['home', 'about', 'projects', 'cv', 'blog'],
 
+  // Reusing Munich's clips as placeholders — same files, referenced twice, not
+  // copied. Swap them for this era's own time-wasting when you have some.
+  videos: [
+    '/videos/hoffman.mp4',
+    '/videos/office.mp4',
+    '/videos/shorts.mp4',
+    '/videos/radiohead.mp4',
+  ],
+  // No `screen` here on purpose: model a plane over the TV face named
+  // `screen_tv` and the placement is read straight out of the GLB. Until then
+  // the Procrastinate button stays hidden for this chapter rather than playing
+  // a video in mid-air.
+
   content: {
     home: {
       greeting: "Hey, it's Tarik",
@@ -47,6 +60,6 @@ export const NUREMBERG: Chapter = {
     },
   },
 
-  // No fallbackShots on purpose. The five `shot_*` cameras are authored in
+  // No fallbackShots on purpose. The six `shot_*` cameras are authored in
   // rooms.blend and travel with the GLB when Cameras is enabled on export.
 }

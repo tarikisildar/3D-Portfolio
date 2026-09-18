@@ -17,6 +17,21 @@ export const MUNICH: Chapter = {
   },
   sections: ['home', 'about', 'projects', 'cv', 'blog'],
 
+  videos: [
+    '/videos/hoffman.mp4',
+    '/videos/office.mp4',
+    '/videos/shorts.mp4',
+    '/videos/radiohead.mp4',
+  ],
+  // Hand-placed over the monitor before screen anchors existed. These are the
+  // numbers that used to be hardcoded in RoomScene; they are already in world
+  // space, so the chapter transform is not applied on top.
+  screen: {
+    position: [-1.243, -1.155, -0.86],
+    rotation: [0, Math.PI * 0.699, 0],
+    size: [0.61, 0.365],
+  },
+
   content: {
     home: {
       greeting: "Hi, I'm Tarik",
