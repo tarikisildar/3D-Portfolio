@@ -47,11 +47,14 @@
   --rail-h: 3.5rem;
   --bar-h: 3.25rem;
 
-  /* Height of the 3D stage. Phones get a band rather than the whole screen:
-     the rooms are wide and low, so a tall frame is mostly empty sky above the
-     half-height walls, and content that arrives sooner helps people who did
-     not realise there was a page below. */
-  --stage-h: 62svh;
+  /* Height of the 3D stage.
+  
+     Short of a full screen on purpose: the intro needs to be readable on
+     arrival, not one scroll away. A room you can see plus a sentence telling
+     you whose room it is beats a room alone. Phones get less still, because
+     the rooms are wide and low and a tall frame is mostly empty background
+     above the half-height walls. */
+  --stage-h: 52svh;
 
   /* `primary` is kept as an alias so the ~57 existing bg-primary/text-primary
      usages keep resolving while pages are migrated. It points at ink, not at
@@ -102,6 +105,95 @@
   font-variation-settings: "wdth" 96, "wght" 500;
 }
 
+/* ---------------------------------------------------------------------------
+   Hotspots: the clickable objects in the room.
+
+   Tag always visible, the way a game labels what you can interact with. A
+   bare dot does not say "click me", and the whole point of these is that
+   people could not tell what to do. The ring marks the exact object; the tag
+   sits above it on a short stem so it never covers the thing it names.
+   Hit area is 44px tall however small the visuals are.
+--------------------------------------------------------------------------- */
+.hotspot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Anchor the ring, not the tag, on the object. drei centres the whole
+     element on the point, so lift it by half its height less half the ring. */
+  transform: translateY(calc(-50% + 5.5px));
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hotspot__label {
+  display: block;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-soft);
+  background: var(--veil-strong);
+  backdrop-filter: blur(6px);
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1;
+  font-variation-settings: "wdth" 100, "wght" 560;
+  box-shadow: 0 1px 3px rgba(46, 51, 56, 0.18);
+  transition: background-color 150ms ease, color 150ms ease,
+    border-color 150ms ease;
+}
+
+.hotspot__stem {
+  width: 1px;
+  height: 12px;
+  background: var(--ink);
+  opacity: 0.55;
+}
+
+.hotspot__ring {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: var(--plaster-lift);
+  transition: transform 150ms ease, background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+/* Invisible padding so the target is thumb-sized. */
+.hotspot::after {
+  content: "";
+  position: absolute;
+  inset: -8px -6px;
+}
+
+.hotspot:hover .hotspot__label,
+.hotspot:focus-visible .hotspot__label {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--plaster);
+}
+
+.hotspot:hover .hotspot__ring,
+.hotspot:focus-visible .hotspot__ring {
+  transform: scale(1.3);
+  background: var(--live);
+  border-color: var(--live);
+}
+
+.hotspot:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotspot__ring,
+  .hotspot__label {
+    transition: none;
+  }
+}
+
 /* A hairline that reads as a drawing rule rather than a divider. */
 .u-rule {
   border-color: var(--rule-soft);
@@ -109,7 +201,7 @@
 
 @media (min-width: 768px) {
   :root {
-    --stage-h: 100svh;
+    --stage-h: 66svh;
   }
 }
 

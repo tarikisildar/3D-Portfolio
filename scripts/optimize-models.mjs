@@ -38,11 +38,12 @@ const SRC_DIR = pathJoin(ROOT, 'models-src');
 const OUT_DIR = pathJoin(ROOT, 'public/models');
 
 /**
- * Nodes whose names we must never lose. Camera shots are authored in Blender as
- * empties named `shot_<section>` and read back out at load time, so flatten and
- * prune have to leave them alone.
+ * Nodes whose names we must never lose, all authored in Blender and read back
+ * at load time: `shot_<section>` cameras, `screen_procrastinate` for video, and
+ * `hotspot_<section>` markers for the clickable objects in the room. flatten
+ * and prune have to leave every one of them alone.
  */
-const KEEP_NAME = /^(shot_|anchor_|screen_)/;
+const KEEP_NAME = /^(shot_|anchor_|screen_|hotspot_)/;
 
 /**
  * `join` refuses to merge any node that has a name, and every node in a Blender

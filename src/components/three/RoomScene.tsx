@@ -10,6 +10,8 @@ import { useProcrastinate } from './ProcrastinateContext'
 import { useChapter } from './ChapterContext'
 import type { Chapter } from '@/data/chapters'
 import { RoomLighting } from './RoomLighting'
+import { extractHotspots, type Hotspot } from './hotspots'
+import { HotspotMarkers } from './HotspotMarkers'
 
 // Where the room sits, which model to load and any pre-Blender fallback shots
 // all come from the active chapter now — see src/data/chapters.ts. Camera shots
@@ -163,6 +165,8 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   // World-space extent of the room, so the key light's shadow frustum can be
   // sized to it rather than to a guess.
   const [bounds, setBounds] = useState<{ centre: THREE.Vector3; radius: number } | null>(null)
+  // Clickable objects in the room, authored as `hotspot_*` empties.
+  const [hotspots, setHotspots] = useState<Hotspot[]>([])
   const [cameraMoving, setCameraMoving] = useState(false)
   // Auto-framing needs the real viewport shape: the scene is a wide letterbox.
   const aspect = useThree((s) => s.size.width / s.size.height)
@@ -172,15 +176,34 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   // in world space with ROOM_TRANSFORM already applied.
   useEffect(() => {
     if (!roomModel?.scene || !roomRef.current) return
-    setAuthoredShots(extractShots(roomRef.current))
+    const authored = extractShots(roomRef.current)
+    setAuthoredShots(authored)
     // Auto-framing from the room's own bounds, so a room with no authored
     // cameras is still viewable rather than inheriting another room's framing.
     setDerivedShots(deriveShots(roomRef.current, aspect))
 
+    const screenMesh = roomRef.current.getObjectByName('screen_procrastinate')
+    const screenPosition = screenMesh
+      ? screenMesh.getWorldPosition(new THREE.Vector3())
+      : chapter.screen
+        ? new THREE.Vector3(...chapter.screen.position)
+        : undefined
+
+    setHotspots(
+      extractHotspots(roomRef.current, {
+        // Only hand-composed shots: auto-framed ones stare at the middle of the
+        // bounding box, which is not an object anyone would click.
+        composedShots: { ...chapter.fallbackShots, ...authored },
+        sections: chapter.sections,
+        // No screen to play on means no procrastinate marker either.
+        screenPosition: chapter.videos?.length ? screenPosition : undefined,
+      })
+    )
+
     const box = new THREE.Box3().setFromObject(roomRef.current)
     const sphere = box.getBoundingSphere(new THREE.Sphere())
     setBounds({ centre: sphere.center.clone(), radius: sphere.radius })
-  }, [roomModel, aspect])
+  }, [roomModel, aspect, chapter])
 
   const shots = useMemo(
     () => resolveShots(authoredShots, chapter.fallbackShots, derivedShots),
@@ -214,6 +237,12 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
       >
         <primitive object={roomModel.scene} />
       </group>
+
+      {/* Hidden while procrastinating: the markers would sit on top of the
+          video you just asked to watch. */}
+      {!procrastinateMode && (
+        <HotspotMarkers hotspots={hotspots} currentSection={page} />
+      )}
 
       <VideoScreen
         active={procrastinateMode}

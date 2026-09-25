@@ -89,7 +89,7 @@ export default function Scene3D() {
           off-screen entirely. */}
       <div
         className="pointer-events-none absolute right-4 z-10 flex items-center gap-2"
-        style={{ bottom: 'calc(var(--rail-h) + 1rem + env(safe-area-inset-bottom))' }}
+        style={{ bottom: '1rem' }}
       >
         <TravelSound />
         <ProcrastinateControls />

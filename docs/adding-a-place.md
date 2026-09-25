@@ -139,6 +139,31 @@ appear for that chapter. Munich has no `screen_procrastinate` — it predates
 this and positions a quad from literal numbers in `Chapter.screen` instead.
 Don't copy that for a new room; model the anchor.
 
+### Clickable objects (hotspots)
+
+The room shows a small tagged marker on each object that leads somewhere:
+*About me*, *Projects*, *CV*, *Blog* and *Procrastinate*. Clicking one does the
+same as the matching tab in the bottom bar.
+
+You get them without doing anything. For each section the site casts a ray
+from the centre of its `shot_<section>` camera and puts the marker on whatever
+it hits first, on the reasoning that a shot is framed around its object. The
+Procrastinate marker sits on `screen_procrastinate`.
+
+When the guess lands somewhere odd (a wall behind the desk, the edge of a
+shelf), place it yourself:
+
+1. Add an **Empty** (a plain axes is fine) on the object
+2. Name it **`hotspot_<section>`** — `hotspot_about`, `hotspot_projects`,
+   `hotspot_cv`, `hotspot_blog`, or `hotspot_procrastinate`
+
+An authored empty always wins over the guess. The pipeline keeps `hotspot_*`
+names, same as `shot_*` and `screen_*`.
+
+Markers whose tag would be cut off at the edge of the 3D view hide themselves,
+so on a phone you may see fewer of them. That's expected; the bottom bar
+reaches every section regardless.
+
 ---
 
 ## 3. Export
@@ -258,8 +283,8 @@ rm -rf .next && npm run dev
 (The `rm -rf .next` matters if you've run `npm run build` — a stale production
 build breaks turbopack dev with a confusing module-not-found 500.)
 
-The timeline appears bottom-left of the 3D view automatically. Click through to
-the new chapter and you should see the map flight, then the room.
+The new year appears in the top bar automatically. Click it and you should see
+the map flight, then the room.
 
 Worth checking:
 
@@ -269,6 +294,9 @@ Worth checking:
   so a heavy room means a longer flight, not a blank canvas.
 - **Changing page mid-camera-move** — click one section then immediately
   another.
+- **The markers.** Each one should sit on its object on the home view, on
+  desktop and on a phone-width window. Add a `hotspot_*` empty for any that
+  don't.
 
 ---
 

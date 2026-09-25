@@ -38,13 +38,13 @@ export default function Home() {
       {/* The room has had the whole screen above this, so the page does not
           greet you a second time — it tells you where you have been standing. */}
       <section className="border-b border-[var(--rule-soft)]">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
-          <div className="grid gap-10 md:grid-cols-[1fr_minmax(0,20rem)] md:items-end">
+        <div className="mx-auto max-w-6xl px-6 pb-14 pt-8 sm:pb-20 sm:pt-10">
+          <div className="grid gap-8 md:grid-cols-[1fr_minmax(0,20rem)] md:items-end">
             <div>
-              <h1 className="u-display text-[clamp(2.5rem,7vw,4.5rem)]">
+              <h1 className="u-display text-[clamp(2.25rem,6vw,4rem)]">
                 {home.greeting}
               </h1>
-              <p className="u-lede mt-6 text-[1.0625rem] text-[var(--ink-soft)]">
+              <p className="u-lede mt-4 text-[1.0625rem] text-[var(--ink-soft)]">
                 {home.roomBlurb}
               </p>
             </div>
@@ -74,9 +74,8 @@ export default function Home() {
                   Getting around
                 </dt>
                 <dd className="mt-1 text-[0.9375rem] leading-relaxed">
-                  The bar along the bottom points the camera at another corner
-                  of this room. The years up top take you somewhere I lived
-                  earlier.
+                  Click the marked objects in the room, or use the bar along the
+                  bottom. The years up top take you somewhere I lived earlier.
                 </dd>
               </div>
             </dl>

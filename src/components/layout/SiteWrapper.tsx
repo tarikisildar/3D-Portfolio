@@ -40,7 +40,7 @@ export default function SiteWrapper({ children }: SiteWrapperProps) {
         <ModelProvider>
           {/* The viewport. Fixed, full-bleed, and behind the content. */}
           <div
-            className="fixed inset-x-0 top-0 z-0 bg-[var(--plaster)]"
+            className="fixed inset-x-0 top-0 z-0 overflow-hidden bg-[var(--plaster)]"
             style={{ height: 'var(--stage-h)' }}
           >
             <Scene3D />
@@ -48,14 +48,13 @@ export default function SiteWrapper({ children }: SiteWrapperProps) {
 
           <TopBar />
 
-          {/* The landing view is the room itself — but deliberately a little
-              short of a full screen, so the top edge of the page below shows
-              above the rail. A visible sliver of content is a better invitation
-              to scroll than any arrow or bouncing chevron would be. */}
+          {/* Reserves the stage, so the content begins exactly where the room
+              ends. The intro then sits on screen from the moment the page
+              opens rather than waiting behind a scroll. */}
           <div
             className="pointer-events-none relative z-10"
             aria-hidden
-            style={{ height: 'calc(var(--stage-h) - 4.5rem)' }}
+            style={{ height: 'var(--stage-h)' }}
           />
 
           {/* Everything below scrolls up over the room. */}
