@@ -12,6 +12,7 @@ import { useProcrastinate } from './ProcrastinateContext'
 import { MapTransition } from './MapTransition'
 import { TravelSound } from './TravelSound'
 import { useChapter } from './ChapterContext'
+import { DrawingSheet, SheetHeading } from './DrawingSheet'
 
 // Map paths to page types
 const getPageTypeFromPath = (path: string): PageType => {
@@ -30,6 +31,7 @@ export default function Scene3D() {
   // True while the camera is moving or a video is playing; drives the frameloop.
   const [busy, setBusy] = useState(false)
   const previousPathRef = useRef(pathname)
+  const { active: procrastinating } = useProcrastinate()
 
   // IMPORTANT: Don't use a key on the Canvas to prevent complete re-creation
   // This ensures the camera animation works
@@ -80,8 +82,10 @@ export default function Scene3D() {
         <Suspense fallback={null}>
           <RoomScene page={currentPage} onBusyChange={setBusy} />
         </Suspense>
+        <SheetHeading />
       </Canvas>
 
+      <DrawingSheet view={procrastinating ? 'procrastinate' : currentPage} />
       <RoomUnderConstruction />
       {/* The era selector now lives in the top bar. What is left here belongs
           to the room itself, clustered clear of the section rail — on a 390px

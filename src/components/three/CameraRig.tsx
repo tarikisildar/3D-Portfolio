@@ -79,6 +79,73 @@ const DRIFT_DAMPING = 6
 
 const WORLD_UP = new THREE.Vector3(0, 1, 0)
 
+/**
+ * Arrival: each time a room is put in place, the camera starts high over it,
+ * looking straight down the way the map does, and lands in the shot. It is the
+ * last leg of the journey the map transition begins, and on a cold load it is
+ * the first thing the site does.
+ */
+const INTRO_DURATION = 2.8
+/**
+ * How much of the frame's narrow side the floor plan's diagonal spans at the
+ * start. Over 1 lets the corners run off the frame: the plan is turned to the
+ * shot's heading, so fitting the whole diagonal leaves it small in a wide
+ * frame. A tall phone frame fits the plan's width, which needs less.
+ */
+const INTRO_FILL_WIDE = 1.4
+const INTRO_FILL_TALL = 1.05
+/** How far behind the centre the descent starts, in footprint radii. */
+const INTRO_SETBACK = 0.3
+
+export type RigIntro = {
+  /** Changes once per room; a new key plays the arrival again. */
+  key: string
+  /** Centre of the room's floor plan, in world space. */
+  centre: THREE.Vector3
+  /** Half the diagonal of the room's floor plan. */
+  footprint: number
+}
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+/**
+ * Overhead pose above the room, turned so the top of the screen points the way
+ * the destination shot faces. The descent then only has to tip forward rather
+ * than also spin around to find its heading.
+ */
+function introPose(shot: Shot, intro: RigIntro, fov: number, aspect: number) {
+  const facing = new THREE.Vector3(0, 0, -1).applyQuaternion(shot.quaternion)
+  facing.y = 0
+  if (facing.lengthSq() < 1e-6) facing.set(0, 0, -1)
+  facing.normalize()
+
+  // Height at which the plan's diagonal spans the frame's narrower side.
+  // Sizing from the plan rather than a bounding sphere matters: a sphere
+  // counts wall height and anything poking out of the room, so it left one
+  // room tiny and cropped another.
+  const halfView = Math.tan(THREE.MathUtils.degToRad(fov) / 2) * Math.min(1, aspect)
+  const fill = aspect >= 1 ? INTRO_FILL_WIDE : INTRO_FILL_TALL
+  const height = intro.footprint / (halfView * fill)
+
+  const eye = intro.centre
+    .clone()
+    .addScaledVector(facing, -intro.footprint * INTRO_SETBACK)
+    .addScaledVector(WORLD_UP, height)
+  // Matrix4.lookAt uses the camera convention (looking down -Z), so this is
+  // the orientation a camera at `eye` needs to face the centre.
+  const look = new THREE.Matrix4().lookAt(eye, intro.centre, facing)
+  return {
+    position: eye,
+    quaternion: new THREE.Quaternion().setFromRotationMatrix(look),
+    facing,
+  }
+}
+
 type CameraRigProps = {
   /** Where the camera should end up. Changing this starts a new move. */
   shot: Shot
@@ -92,6 +159,14 @@ type CameraRigProps = {
    * loop open for the duration.
    */
   onMovingChange?: (moving: boolean) => void
+  /** Room to arrive into from overhead; see INTRO_DURATION. */
+  intro?: RigIntro | null
+  /**
+   * Wait at the overhead start instead of descending. Set while the map
+   * transition still covers the stage, so the arrival is seen rather than
+   * played behind the curtain, and the map lifts onto a view of the plan.
+   */
+  holdIntro?: boolean
 }
 
 /**
@@ -111,7 +186,13 @@ type CameraRigProps = {
  * mutable singletons, which survived hot reloads incorrectly and double-applied
  * under StrictMode's double mount.
  */
-export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRigProps) {
+export function CameraRig({
+  shot,
+  immediate = false,
+  onMovingChange,
+  intro,
+  holdIntro = false,
+}: CameraRigProps) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null)
   const invalidate = useThree((s) => s.invalidate)
   const scene = useThree((s) => s.scene)
@@ -129,6 +210,21 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
   const animating = useRef(false)
   /** World-space height the arc should peak at, or null for a straight move. */
   const apexY = useRef<number | null>(null)
+  /** True while playing the arrival, which follows its own landing curve. */
+  const landing = useRef(false)
+  /** Key of the last room the arrival played for. */
+  const introKey = useRef<string | null>(null)
+  /**
+   * What the arrival looks at: from the middle of the plan to the thing the
+   * destination shot is framed on. Aiming at a moving point, rather than
+   * slerping between the two orientations, keeps the room in frame all the
+   * way down; the slerp let a large flat slide out of view mid-descent.
+   */
+  const introLook = useRef({
+    from: new THREE.Vector3(),
+    to: new THREE.Vector3(),
+    facing: new THREE.Vector3(),
+  })
 
   const from = useRef({
     position: new THREE.Vector3(),
@@ -155,6 +251,8 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
   const scratchMid = useRef(new THREE.Vector3())
   const scratchPivot = useRef(new THREE.Vector3())
   const scratchYaw = useRef(new THREE.Quaternion())
+  const scratchUp = useRef(new THREE.Vector3())
+  const scratchLook = useRef(new THREE.Matrix4())
 
   // Scroll only sets a target; the frame loop eases towards it, so a flick of
   // the wheel reads as a glide rather than a jolt.
@@ -207,6 +305,58 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     const camera = cameraRef.current
     if (!camera) return
 
+    // A new room has just been put in place: descend into it from above.
+    if (intro && intro.key !== introKey.current) {
+      if (immediate || prefersReducedMotion()) {
+        introKey.current = intro.key
+      } else {
+        const fov = fovForAspect(shot.fov, aspect)
+        const start = introPose(shot, intro, fov, aspect)
+        base.current.position.copy(start.position)
+        base.current.quaternion.copy(start.quaternion)
+        camera.position.copy(start.position)
+        camera.quaternion.copy(start.quaternion)
+        camera.fov = fov
+        camera.updateProjectionMatrix()
+        to.current = shot
+
+        if (holdIntro) {
+          // Park overhead; the key stays unplayed so releasing the hold
+          // re-enters here and starts the descent.
+          if (animating.current) notify.current?.(false)
+          animating.current = false
+          landing.current = false
+          invalidate()
+          return
+        }
+
+        introKey.current = intro.key
+        introLook.current.from.copy(intro.centre)
+        // The point on the shot's line of sight level with the room's
+        // centre in depth. Deliberately not a raycast: a ray can stop on
+        // something right by the lens (a window, a light fitting), which put
+        // the target in mid-air and let the room sink out of frame.
+        const sight = new THREE.Vector3(0, 0, -1).applyQuaternion(shot.quaternion)
+        const depth = Math.max(
+          intro.centre.clone().sub(shot.position).dot(sight),
+          1
+        )
+        introLook.current.to.copy(shot.position).addScaledVector(sight, depth)
+        introLook.current.facing.copy(start.facing)
+        from.current.position.copy(start.position)
+        from.current.quaternion.copy(start.quaternion)
+        from.current.fov = fov
+        apexY.current = null
+        landing.current = true
+        duration.current = INTRO_DURATION
+        elapsed.current = 0
+        animating.current = true
+        notify.current?.(true)
+        invalidate()
+        return
+      }
+    }
+
     const isFirstPlacement = immediate || to.current === null
 
     if (isFirstPlacement) {
@@ -227,6 +377,7 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     from.current.position.copy(base.current.position)
     from.current.quaternion.copy(base.current.quaternion)
     from.current.fov = camera.fov
+    landing.current = false
 
     const distance = from.current.position.distanceTo(shot.position)
 
@@ -255,7 +406,7 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     animating.current = true
     notify.current?.(true)
     invalidate()
-  }, [shot, immediate, invalidate, aspect])
+  }, [shot, immediate, invalidate, aspect, intro, holdIntro])
 
   // Make sure the render loop is not left pinned open if we unmount mid-move.
   useEffect(() => () => notify.current?.(false), [])
@@ -273,7 +424,23 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
       const raw = Math.min(elapsed.current / duration.current, 1)
       const t = ease(raw)
 
-      if (apexY.current !== null) {
+      if (landing.current) {
+        // Travel across while still high, then come straight down into the
+        // shot: the control point sits directly above the destination.
+        const p0 = from.current.position
+        const p1 = target.position
+        const control = scratchMid.current.set(
+          p1.x,
+          p1.y + (p0.y - p1.y) * 0.6,
+          p1.z
+        )
+        const inv = 1 - t
+        pose.position
+          .copy(p0)
+          .multiplyScalar(inv * inv)
+          .addScaledVector(control, 2 * inv * t)
+          .addScaledVector(p1, t * t)
+      } else if (apexY.current !== null) {
         const p0 = from.current.position
         const p1 = target.position
         // A quadratic Bezier peaks at (P0 + 2C + P1) / 4, so solve for the
@@ -295,7 +462,22 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
         pose.position.lerpVectors(from.current.position, target.position, t)
       }
 
-      pose.quaternion.slerpQuaternions(from.current.quaternion, target.quaternion, t)
+      if (landing.current) {
+        const look = introLook.current
+        const focus = scratchMid.current.lerpVectors(look.from, look.to, t)
+        // Screen-up turns from the shot's heading (top-down, like the map)
+        // to the sky as the camera levels out.
+        const up = scratchUp.current.lerpVectors(look.facing, WORLD_UP, t).normalize()
+        pose.quaternion.setFromRotationMatrix(
+          scratchLook.current.lookAt(pose.position, focus, up)
+        )
+        // Hand over to the authored orientation for the last stretch, so any
+        // roll or off-centre framing in the shot is landed exactly.
+        const settle = THREE.MathUtils.smoothstep(raw, 0.7, 1)
+        pose.quaternion.slerp(target.quaternion, settle)
+      } else {
+        pose.quaternion.slerpQuaternions(from.current.quaternion, target.quaternion, t)
+      }
       const targetFov = fovForAspect(target.fov, aspect)
       camera.fov = from.current.fov + (targetFov - from.current.fov) * t
       camera.updateProjectionMatrix()
@@ -307,6 +489,7 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
         camera.fov = fovForAspect(target.fov, aspect)
         camera.updateProjectionMatrix()
         animating.current = false
+        landing.current = false
         notify.current?.(false)
       }
     }

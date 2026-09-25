@@ -15,7 +15,6 @@ export default function Home() {
   // and the About teaser all belong to the era you are standing in.
   const { chapter } = useChapter();
   const home = chapter.content.home;
-  const [from, to] = chapter.period;
 
   const featuredProjects = projects.filter((project) => project.featured);
 
@@ -49,35 +48,17 @@ export default function Home() {
               </p>
             </div>
 
-            {/* A caption to the viewport above, rather than a card competing
-                with it. The "getting around" line is the one piece of
-                instruction left, and it points at controls that are now
-                visible instead of describing invisible ones. */}
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-[var(--rule-soft)] pt-6 md:border-t-0 md:pt-0">
-              <div>
-                <dt className="text-[0.8125rem] text-[var(--ink-soft)]">Place</dt>
-                <dd
-                  className="mt-1 text-[1.0625rem]"
-                  style={{ fontVariationSettings: '"wdth" 106, "wght" 600' }}
-                >
-                  {chapter.city}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[0.8125rem] text-[var(--ink-soft)]">Years</dt>
-                <dd className="u-figures mt-1 text-[1.0625rem]">
-                  {from}&ndash;{to ?? 'now'}
-                </dd>
-              </div>
-              <div className="col-span-2">
-                <dt className="text-[0.8125rem] text-[var(--ink-soft)]">
-                  Getting around
-                </dt>
-                <dd className="mt-1 text-[0.9375rem] leading-relaxed">
-                  Click the marked objects in the room, or use the bar along the
-                  bottom. The years up top take you somewhere I lived earlier.
-                </dd>
-              </div>
+            {/* Place and years are in the sheet's title block on the stage;
+                this keeps only the one piece of instruction, pointing at
+                controls that are visible rather than describing hidden ones. */}
+            <dl className="border-t border-[var(--rule-soft)] pt-6 md:border-t-0 md:pt-0">
+              <dt className="text-[0.8125rem] text-[var(--ink-soft)]">
+                Getting around
+              </dt>
+              <dd className="mt-1 text-[0.9375rem] leading-relaxed">
+                Click the marked objects in the room, or use the bar along the
+                bottom. The years up top take you somewhere I lived earlier.
+              </dd>
             </dl>
           </div>
         </div>

@@ -126,6 +126,15 @@
   background: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  animation: hotspot-in 320ms ease-out both;
+}
+
+/* Markers are unmounted while the camera moves, so each arrival fades them
+   back in rather than popping them. */
+@keyframes hotspot-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .hotspot__label {
@@ -248,8 +257,114 @@
   .hotspot__stem {
     transition: none;
   }
+  .hotspot,
   .hotspot__ring::after {
     animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Drawing sheet: the chrome around the 3D stage, after an architect's set.
+   See DrawingSheet.tsx. Everything here is ink on the room at low contrast;
+   it frames the room and should never compete with it.
+--------------------------------------------------------------------------- */
+.sheet {
+  --sheet-inset: 12px;
+  /* The stage runs up behind the top bar, so the top edge of the sheet is
+     where the bar ends. */
+  --sheet-top: calc(var(--bar-h) + var(--sheet-inset));
+  color: var(--ink);
+}
+
+.sheet__crop {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--ink);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.45;
+}
+.sheet__crop--tl { top: var(--sheet-top); left: var(--sheet-inset); border-top-width: 1px; border-left-width: 1px; }
+.sheet__crop--tr { top: var(--sheet-top); right: var(--sheet-inset); border-top-width: 1px; border-right-width: 1px; }
+.sheet__crop--bl { bottom: var(--sheet-inset); left: var(--sheet-inset); border-bottom-width: 1px; border-left-width: 1px; }
+.sheet__crop--br { bottom: var(--sheet-inset); right: var(--sheet-inset); border-bottom-width: 1px; border-right-width: 1px; }
+
+.sheet__north {
+  position: absolute;
+  top: calc(var(--sheet-top) + 10px);
+  right: calc(var(--sheet-inset) + 10px);
+  opacity: 0.75;
+}
+.sheet__north text {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-variation-settings: "wdth" 110, "wght" 650;
+}
+.sheet__needle {
+  transform-origin: 20px 20px;
+  transform: rotate(var(--sheet-heading, 0deg));
+}
+
+/* Title block: a strip of ruled cells, label over value, the way every
+   drawing in a set is signed off. */
+.sheet__block {
+  position: absolute;
+  left: calc(var(--sheet-inset) + 10px);
+  bottom: calc(var(--sheet-inset) + 10px);
+  display: flex;
+  margin: 0;
+  border: 1px solid var(--ink);
+  background: var(--veil-strong);
+}
+
+.sheet__cell {
+  padding: 6px 12px 7px;
+  border-left: 1px solid var(--rule);
+}
+.sheet__cell:first-child {
+  border-left: 0;
+}
+.sheet__cell dt {
+  font-size: 0.5625rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-variation-settings: "wdth" 110, "wght" 500;
+}
+.sheet__cell dd {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1;
+  white-space: nowrap;
+  font-variation-settings: "wdth" 104, "wght" 560;
+}
+.sheet__cell--sheet dd {
+  font-variation-settings: "wdth" 96, "wght" 650;
+}
+.sheet__of {
+  color: var(--ink-soft);
+  font-variation-settings: "wdth" 96, "wght" 450;
+}
+.sheet__cell .sheet__place {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-variation-settings: "wdth" 125, "wght" 640;
+}
+
+/* Phones: the Procrastinate controls take the whole bottom edge, so the
+   block moves to the top corner and keeps only the sheet number and place. */
+@media (max-width: 639px) {
+  .sheet__block {
+    bottom: auto;
+    top: calc(var(--sheet-top) + 10px);
+  }
+  .sheet__cell--wide {
+    display: none;
+  }
+  .sheet__north svg {
+    width: 32px;
+    height: 32px;
   }
 }
 

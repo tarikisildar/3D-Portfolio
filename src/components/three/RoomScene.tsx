@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useSharedModel } from './ModelContext'
-import { CameraRig } from './CameraRig'
+import { CameraRig, type RigIntro } from './CameraRig'
 import { extractShots, deriveShots, resolveShots, type PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
 import { useChapter } from './ChapterContext'
@@ -154,7 +154,7 @@ function VideoScreen({
 
 export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   const { roomModel } = useSharedModel()
-  const { chapter } = useChapter()
+  const { chapter, pending } = useChapter()
   const roomRef = useRef<THREE.Group>(null)
   // Procrastinate mode is shared with the page content outside the Canvas, so
   // it lives in a context rather than in this component.
@@ -164,7 +164,12 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   const [derivedShots, setDerivedShots] = useState({})
   // World-space extent of the room, so the key light's shadow frustum can be
   // sized to it rather than to a guess.
-  const [bounds, setBounds] = useState<{ centre: THREE.Vector3; radius: number } | null>(null)
+  const [bounds, setBounds] = useState<{
+    centre: THREE.Vector3
+    radius: number
+    /** Half the diagonal of the floor plan; sizes the arrival shot. */
+    footprint: number
+  } | null>(null)
   // Clickable objects in the room, authored as `hotspot_*` empties.
   const [hotspots, setHotspots] = useState<Hotspot[]>([])
   const [cameraMoving, setCameraMoving] = useState(false)
@@ -202,7 +207,12 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
 
     const box = new THREE.Box3().setFromObject(roomRef.current)
     const sphere = box.getBoundingSphere(new THREE.Sphere())
-    setBounds({ centre: sphere.center.clone(), radius: sphere.radius })
+    const size = box.getSize(new THREE.Vector3())
+    setBounds({
+      centre: sphere.center.clone(),
+      radius: sphere.radius,
+      footprint: Math.hypot(size.x, size.z) / 2,
+    })
   }, [roomModel, aspect, chapter])
 
   const shots = useMemo(
@@ -215,6 +225,17 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   )
   const activeShot = shots[procrastinateMode ? 'procrastinate' : page]
 
+  // One arrival per room model: keyed on the loaded scene, not the chapter,
+  // because the chapter switches a beat before its model has finished loading
+  // and the bounds measured in between belong to the room being left.
+  const intro = useMemo<RigIntro | null>(
+    () =>
+      bounds && roomModel
+        ? { key: roomModel.scene.uuid, centre: bounds.centre, footprint: bounds.footprint }
+        : null,
+    [bounds, roomModel]
+  )
+
   // A playing video needs frames just as much as a moving camera does.
   const busy = cameraMoving || procrastinateMode
   useEffect(() => {
@@ -225,7 +246,12 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
 
   return (
     <>
-      <CameraRig shot={activeShot} onMovingChange={setCameraMoving} />
+      <CameraRig
+        shot={activeShot}
+        onMovingChange={setCameraMoving}
+        intro={intro}
+        holdIntro={pending !== null}
+      />
 
       {bounds && <RoomLighting centre={bounds.centre} radius={bounds.radius} />}
 
@@ -238,9 +264,12 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
         <primitive object={roomModel.scene} />
       </group>
 
-      {/* Hidden while procrastinating: the markers would sit on top of the
-          video you just asked to watch. */}
-      {!procrastinateMode && (
+      {/* Hidden while procrastinating, where they would sit on top of the
+          video you just asked to watch; while the camera is moving, where
+          they would slide around the screen; and while travelling, where they
+          would dot the overhead plan waiting under the map. They fade back in
+          on arrival. */}
+      {!procrastinateMode && !cameraMoving && !pending && (
         <HotspotMarkers hotspots={hotspots} currentSection={page} />
       )}
 
