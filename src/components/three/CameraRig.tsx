@@ -62,6 +62,23 @@ function fovForAspect(authoredFov: number, aspect: number): number {
  */
 const MAX_DELTA = 1 / 15
 
+/**
+ * Scroll drift: while the page scrolls up over the stage, the camera orbits a
+ * few degrees around what it is looking at and eases in a touch. Small enough
+ * that the shot still reads as the same shot; enough that the furniture shifts
+ * against the walls behind it, which is what tells you this is a space and
+ * not a picture of one.
+ */
+const DRIFT_YAW = THREE.MathUtils.degToRad(6)
+/** Fraction of the distance to the subject closed at full drift. */
+const DRIFT_DOLLY = 0.08
+/** Used when the centre ray hits nothing, e.g. a shot looking out a window. */
+const DRIFT_FALLBACK_DISTANCE = 5
+/** How quickly the camera catches up with the scroll position, per second. */
+const DRIFT_DAMPING = 6
+
+const WORLD_UP = new THREE.Vector3(0, 1, 0)
+
 type CameraRigProps = {
   /** Where the camera should end up. Changing this starts a new move. */
   shot: Shot
@@ -97,6 +114,7 @@ type CameraRigProps = {
 export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRigProps) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null)
   const invalidate = useThree((s) => s.invalidate)
+  const scene = useThree((s) => s.scene)
   // Shots are adapted to the viewport's real shape; see fovForAspect.
   const aspect = useThree((s) => s.size.width / s.size.height)
 
@@ -119,9 +137,71 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
   })
   const to = useRef<Shot | null>(null)
 
+  // The pose the shot animation produces, before scroll drift is layered on
+  // top. Kept apart from the camera so a move interrupted while scrolled
+  // starts from the shot path, not from the drifted view.
+  const base = useRef({
+    position: new THREE.Vector3(),
+    quaternion: new THREE.Quaternion(),
+  })
+  /** Scroll progress through the stage, 0..1: where it is and where it is headed. */
+  const drift = useRef(0)
+  const driftTarget = useRef(0)
+  /** Distance from the shot's camera to the thing at the centre of frame. */
+  const pivotDistance = useRef(DRIFT_FALLBACK_DISTANCE)
+
   // Scratch objects, reused every frame so the loop allocates nothing.
   const scratchPos = useRef(new THREE.Vector3())
   const scratchMid = useRef(new THREE.Vector3())
+  const scratchPivot = useRef(new THREE.Vector3())
+  const scratchYaw = useRef(new THREE.Quaternion())
+
+  // Scroll only sets a target; the frame loop eases towards it, so a flick of
+  // the wheel reads as a glide rather than a jolt.
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => {
+      if (reduced.matches) {
+        driftTarget.current = 0
+      } else {
+        // The stage is fixed and the content scrolls over it, so it is fully
+        // covered after one stage height; drift across exactly that span.
+        const stage = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--stage-h')
+        )
+        const stagePx = ((Number.isFinite(stage) ? stage : 60) / 100) * window.innerHeight
+        driftTarget.current = THREE.MathUtils.clamp(window.scrollY / stagePx, 0, 1)
+      }
+      invalidate()
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    reduced.addEventListener('change', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      reduced.removeEventListener('change', update)
+    }
+  }, [invalidate])
+
+  // Orbit around what the shot is framed on, found by looking down the centre
+  // of the lens. Rooms differ threefold in size, so a fixed pivot distance
+  // would swing a small room wildly and barely move a large one.
+  useEffect(() => {
+    const raycaster = new THREE.Raycaster(
+      shot.position,
+      new THREE.Vector3(0, 0, -1).applyQuaternion(shot.quaternion),
+      0.05,
+      60
+    )
+    const hit = raycaster
+      .intersectObjects(scene.children, true)
+      .find((h) => (h.object as THREE.Mesh).isMesh)
+    pivotDistance.current = hit
+      ? THREE.MathUtils.clamp(hit.distance, 1, 30)
+      : DRIFT_FALLBACK_DISTANCE
+  }, [shot, scene])
 
   useEffect(() => {
     const camera = cameraRef.current
@@ -130,6 +210,8 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     const isFirstPlacement = immediate || to.current === null
 
     if (isFirstPlacement) {
+      base.current.position.copy(shot.position)
+      base.current.quaternion.copy(shot.quaternion)
       camera.position.copy(shot.position)
       camera.quaternion.copy(shot.quaternion)
       camera.fov = fovForAspect(shot.fov, aspect)
@@ -142,8 +224,8 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
 
     // Start from wherever the camera actually is, so interrupting a move
     // mid-flight continues smoothly instead of snapping.
-    from.current.position.copy(camera.position)
-    from.current.quaternion.copy(camera.quaternion)
+    from.current.position.copy(base.current.position)
+    from.current.quaternion.copy(base.current.quaternion)
     from.current.fov = camera.fov
 
     const distance = from.current.position.distanceTo(shot.position)
@@ -181,48 +263,79 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
   useFrame((_, delta) => {
     const camera = cameraRef.current
     const target = to.current
-    if (!camera || !target || !animating.current) return
+    if (!camera || !target) return
 
-    elapsed.current += Math.min(delta, MAX_DELTA)
-    const raw = Math.min(elapsed.current / duration.current, 1)
-    const t = ease(raw)
+    const step = Math.min(delta, MAX_DELTA)
+    const pose = base.current
 
-    if (apexY.current !== null) {
-      const p0 = from.current.position
-      const p1 = target.position
-      // A quadratic Bezier peaks at (P0 + 2C + P1) / 4, so solve for the
-      // control point that makes the curve actually reach apexY.
-      const control = scratchMid.current.set(
-        (p0.x + p1.x) / 2,
-        (4 * apexY.current - p0.y - p1.y) / 2,
-        (p0.z + p1.z) / 2
-      )
+    if (animating.current) {
+      elapsed.current += step
+      const raw = Math.min(elapsed.current / duration.current, 1)
+      const t = ease(raw)
 
-      const inv = 1 - t
-      scratchPos.current
-        .copy(p0)
-        .multiplyScalar(inv * inv)
-        .addScaledVector(control, 2 * inv * t)
-        .addScaledVector(p1, t * t)
-      camera.position.copy(scratchPos.current)
-    } else {
-      camera.position.lerpVectors(from.current.position, target.position, t)
-    }
+      if (apexY.current !== null) {
+        const p0 = from.current.position
+        const p1 = target.position
+        // A quadratic Bezier peaks at (P0 + 2C + P1) / 4, so solve for the
+        // control point that makes the curve actually reach apexY.
+        const control = scratchMid.current.set(
+          (p0.x + p1.x) / 2,
+          (4 * apexY.current - p0.y - p1.y) / 2,
+          (p0.z + p1.z) / 2
+        )
 
-    camera.quaternion.slerpQuaternions(from.current.quaternion, target.quaternion, t)
-    const targetFov = fovForAspect(target.fov, aspect)
-    camera.fov = from.current.fov + (targetFov - from.current.fov) * t
-    camera.updateProjectionMatrix()
+        const inv = 1 - t
+        scratchPos.current
+          .copy(p0)
+          .multiplyScalar(inv * inv)
+          .addScaledVector(control, 2 * inv * t)
+          .addScaledVector(p1, t * t)
+        pose.position.copy(scratchPos.current)
+      } else {
+        pose.position.lerpVectors(from.current.position, target.position, t)
+      }
 
-    if (raw >= 1) {
-      // Land exactly on the shot rather than wherever easing left us.
-      camera.position.copy(target.position)
-      camera.quaternion.copy(target.quaternion)
-      camera.fov = fovForAspect(target.fov, aspect)
+      pose.quaternion.slerpQuaternions(from.current.quaternion, target.quaternion, t)
+      const targetFov = fovForAspect(target.fov, aspect)
+      camera.fov = from.current.fov + (targetFov - from.current.fov) * t
       camera.updateProjectionMatrix()
-      animating.current = false
-      notify.current?.(false)
+
+      if (raw >= 1) {
+        // Land exactly on the shot rather than wherever easing left us.
+        pose.position.copy(target.position)
+        pose.quaternion.copy(target.quaternion)
+        camera.fov = fovForAspect(target.fov, aspect)
+        camera.updateProjectionMatrix()
+        animating.current = false
+        notify.current?.(false)
+      }
     }
+
+    // Ease the drift towards the scroll position. Keep asking for frames
+    // until it arrives: the loop idles on demand otherwise.
+    drift.current = THREE.MathUtils.damp(drift.current, driftTarget.current, DRIFT_DAMPING, step)
+    if (Math.abs(drift.current - driftTarget.current) < 1e-4) {
+      drift.current = driftTarget.current
+    } else {
+      invalidate()
+    }
+
+    // Apply the drift: orbit about the world up axis through the point the
+    // camera is looking at, closing in slightly as it goes.
+    const amount = drift.current
+    const distance = pivotDistance.current
+    const pivot = scratchPivot.current
+      .set(0, 0, -distance)
+      .applyQuaternion(pose.quaternion)
+      .add(pose.position)
+    const yaw = scratchYaw.current.setFromAxisAngle(WORLD_UP, amount * DRIFT_YAW)
+    camera.position
+      .copy(pose.position)
+      .sub(pivot)
+      .multiplyScalar(1 - amount * DRIFT_DOLLY)
+      .applyQuaternion(yaw)
+      .add(pivot)
+    camera.quaternion.copy(yaw).multiply(pose.quaternion)
   })
 
   return (
