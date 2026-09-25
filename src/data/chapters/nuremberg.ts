@@ -1,5 +1,5 @@
 import type { Chapter } from './types'
-import munichAbout from './munich.about'
+import nurembergAbout from './nuremberg.about'
 
 export const NUREMBERG: Chapter = {
   id: 'nuremberg',
@@ -39,19 +39,21 @@ export const NUREMBERG: Chapter = {
       // TODO: your words. This is the one line that most obviously belongs to
       // the new place — it currently still describes the Munich room.
       roomBlurb:
-        'Welcome to my virtual apartment in Nuremberg, where I moved in 2025 to start a new job.',
+        'Welcome to my virtual apartment in Nuremberg. This is a replica of the place I lived during the Nuremberg leg of my adventure. Enjoy your stay!',
       // TODO: the Munich-era paragraphs, carried over so the page is not empty.
       // Rewriting these is the point of per-chapter content.
       aboutPreview: [
-        "I'm a Computer Graphics and Robotics specialist with an M.Sc. from the Technical University of Munich, where I've focused on real-time rendering, autonomous systems, and AI-powered solutions.",
-        "Over the years, I've worked on exciting projects ranging from autonomous vehicle systems to real-time visualization tools, blending technical expertise with creativity to solve complex challenges.",
+        "I'm a Software Engineer with an M.Sc. from the Technical University of Munich. I've worked on Games, Autonomous Driving, and even Shoes throughout my career.",
+        "I like running, hiking, photography and nerding about coffee",
+        "I initially made this website as a portfolio to help me find a job. But nowadays I'm keeping just for fun, so don't expect much structure.",
+
       ],
-      photo: '/images/tarik/me.jpg',
+      photo: '/images/tarik/me_nrm.jpg',
     },
     // TODO: currently the Munich-era About, shared by reference. Replace with a
     // Nuremberg-era copy — a new object, not a mutation of this one, or you will
     // edit Munich's past as well.
-    about: munichAbout,
+    about: nurembergAbout,
     // TODO: point at the current CV once it is updated. Sharing Munich's link
     // means the "then" and "now" CVs are identical.
     cv: {

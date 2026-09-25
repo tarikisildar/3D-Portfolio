@@ -110,10 +110,11 @@ export function TravelSound() {
       aria-pressed={muted}
       aria-label={muted ? 'Unmute travel sound' : 'Mute travel sound'}
       title={muted ? 'Travel sound off' : 'Travel sound on'}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full
-                 bg-black/35 text-white/80 backdrop-blur-sm transition-colors
-                 hover:bg-black/50 hover:text-white focus:outline-none
-                 focus-visible:ring-2 focus-visible:ring-white/70"
+      className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center
+                 rounded-full border border-[var(--rule-soft)] bg-[var(--veil-strong)]
+                 text-[var(--ink-soft)] backdrop-blur-md transition-colors
+                 hover:text-[var(--ink)] focus:outline-none
+                 focus-visible:ring-2 focus-visible:ring-[var(--live)]"
     >
       {muted ? <MutedIcon /> : <SoundIcon />}
     </button>

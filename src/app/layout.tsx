@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import SiteWrapper from "@/components/layout/SiteWrapper";
 import { Analytics } from '@vercel/analytics/react';
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import PageViewTracker from "@/components/PageViewTracker";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * One family, doing two jobs through its width axis.
+ *
+ * Archivo is a grotesque with a real `wdth` axis, so display type can be set
+ * wide and tight — the lettering of a drawing-set title block — while the same
+ * family at normal width handles running text. Width, rather than a second
+ * typeface, is what carries the personality here.
+ */
+const archivo = Archivo({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${archivo.variable} antialiased`}
       >
         <SiteWrapper>{children}</SiteWrapper>
         <Analytics />

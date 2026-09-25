@@ -19,7 +19,7 @@ export default function Footer() {
 
           {/* Sitemap */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider">
+            <h3 className="text-[0.8125rem] text-[var(--ink-soft)]">
               Sitemap
             </h3>
             <ul className="mt-4 space-y-2">
@@ -60,7 +60,7 @@ export default function Footer() {
 
           {/* Social links */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider">
+            <h3 className="text-[0.8125rem] text-[var(--ink-soft)]">
               Connect
             </h3>
             <div className="mt-4 flex space-x-6">

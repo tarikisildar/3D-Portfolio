@@ -9,7 +9,6 @@ import { Loader } from '@react-three/drei'
 import { RoomScene } from './RoomScene'
 import type { PageType } from './shots'
 import { useProcrastinate } from './ProcrastinateContext'
-import { ChapterTimeline } from './ChapterTimeline'
 import { MapTransition } from './MapTransition'
 import { TravelSound } from './TravelSound'
 import { useChapter } from './ChapterContext'
@@ -70,7 +69,8 @@ export default function Scene3D() {
           // and is only needed to read pixels back (screenshots). Off.
         }}
       >
-        <color attach="background" args={['#f5e5d3']} />
+        {/* Same value as --plaster: the viewport and the page are one surface. */}
+        <color attach="background" args={['#ede4d6']} />
 
         {/* Lighting lives in RoomScene: the key light's shadow frustum has to be
             sized to the room it is lighting, and rooms differ by a factor of
@@ -83,12 +83,16 @@ export default function Scene3D() {
       </Canvas>
 
       <RoomUnderConstruction />
-      <ProcrastinateControls />
-      {/* Travel controls share one positioned row so the mute toggle sits
-          beside the timeline however many chapters there are. */}
-      <div className="absolute bottom-5 left-5 z-10 flex items-center gap-2">
-        <ChapterTimeline />
+      {/* The era selector now lives in the top bar. What is left here belongs
+          to the room itself, clustered clear of the section rail — on a 390px
+          screen the old row overflowed the viewport and pushed Procrastinate
+          off-screen entirely. */}
+      <div
+        className="pointer-events-none absolute right-4 z-10 flex items-center gap-2"
+        style={{ bottom: 'calc(var(--rail-h) + 1rem + env(safe-area-inset-bottom))' }}
+      >
         <TravelSound />
+        <ProcrastinateControls />
       </div>
 
       {/* Sits above the canvas and the controls: while travelling between
@@ -153,28 +157,34 @@ function ProcrastinateControls() {
   if (!chapter.model || !chapter.videos?.length) return null
 
   const base =
-    'px-4 py-2 rounded-md text-white text-sm font-semibold shadow-md transition-all ' +
-    'hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 ' +
-    'focus-visible:ring-white/70'
+    'pointer-events-auto rounded-full border border-[var(--rule-soft)] px-4 py-2 ' +
+    'text-[0.8125rem] backdrop-blur-md transition-colors focus:outline-none ' +
+    'focus-visible:ring-2 focus-visible:ring-[var(--live)]'
 
   return (
-    <div className="absolute bottom-5 right-5 z-10 flex gap-2.5">
+    <div className="flex gap-2">
       {active ? (
         <>
-          <button onClick={exit} className={`${base} bg-red-500 hover:bg-red-400`}>
-            Exit
+          <button
+            onClick={exit}
+            className={`${base} bg-[var(--veil-strong)] text-[var(--ink)] hover:bg-[var(--plaster-lift)]`}
+            style={{ fontVariationSettings: '"wdth" 100, "wght" 550' }}
+          >
+            Back to work
           </button>
           <button
             onClick={nextVideo}
-            className={`${base} bg-green-600 hover:bg-green-500`}
+            className={`${base} bg-[var(--veil-strong)] text-[var(--ink)] hover:bg-[var(--plaster-lift)]`}
+            style={{ fontVariationSettings: '"wdth" 100, "wght" 550' }}
           >
-            Next Video
+            Next video
           </button>
         </>
       ) : (
         <button
           onClick={() => start('button_click', 'room_scene')}
-          className={`${base} bg-[#ff6b6b] hover:bg-[#ff8787]`}
+          className={`${base} bg-[var(--veil-strong)] text-[var(--ink)] hover:bg-[var(--plaster-lift)]`}
+          style={{ fontVariationSettings: '"wdth" 100, "wght" 550' }}
         >
           Procrastinate
         </button>

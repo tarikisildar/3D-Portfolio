@@ -30,8 +30,10 @@ export default async function Blog() {
                 <span className="bg-primary/10 text-primary text-xs font-medium px-3 py-1 rounded-full mb-2 md:mb-0 inline-block">
                   {post.category}
                 </span>
-                <div className="text-sm text-foreground/60">
-                  {post.date} • {post.readTime}
+                <div className="text-sm text-[var(--ink-soft)]">
+                  <span>{post.date}</span>
+                  <span className="mx-2 text-[var(--rule)]">/</span>
+                  <span>{post.readTime}</span>
                 </div>
               </div>
 
@@ -47,12 +49,9 @@ export default async function Blog() {
 
               <Link
                 href={`/blog/${post.slug}`}
-                className="text-primary hover:text-primary-dark font-medium inline-flex items-center transition-colors"
+                className="text-[0.9375rem] text-[var(--ink)] underline decoration-[var(--live)] decoration-2 underline-offset-4 transition-colors hover:text-[var(--live)]"
               >
-                Read More
-                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+                Read the post
               </Link>
             </article>
           ))}

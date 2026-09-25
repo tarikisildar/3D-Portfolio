@@ -5,12 +5,8 @@ import { useRouter } from "next/navigation";
 import ProjectCard from "@/components/ui/ProjectCard";
 import projects from "@/data/projects";
 import Image from "next/image";
-import { trackButtonClick } from '@/utils/analytics';
 import { useProcrastinate } from '@/components/three/ProcrastinateContext';
 import { useChapter } from '@/components/three/ChapterContext';
-
-// Define the page types for random navigation
-const pageTabs = ['about', 'projects', 'cv', 'blog'];
 
 export default function Home() {
   const router = useRouter();
@@ -19,14 +15,12 @@ export default function Home() {
   // and the About teaser all belong to the era you are standing in.
   const { chapter } = useChapter();
   const home = chapter.content.home;
+  const [from, to] = chapter.period;
 
-  // Filter featured projects
   const featuredProjects = projects.filter((project) => project.featured);
 
-  // Handle project expansion by navigating to the projects page
   const handleProjectExpand = (projectId: number | null) => {
     if (projectId) {
-      // Navigate to the projects page with the specific project slug
       const project = projects.find(p => p.id === projectId);
       if (project) {
         router.push(`/projects?project=${project.slug}`);
@@ -34,103 +28,80 @@ export default function Home() {
     }
   };
 
-  // Function to navigate to a random tab
-  const navigateToRandomTab = () => {
-    const randomTab = pageTabs[Math.floor(Math.random() * pageTabs.length)];
-
-    // Track the random navigation
-    trackButtonClick('random_navigation', 'homepage', {
-      destination: randomTab
-    });
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    router.push(`/${randomTab}`);
-  };
-
-  // Function to trigger procrastination mode
   const triggerProcrastinate = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     startProcrastinating('card_click', 'homepage');
   };
 
-  // Function to scroll to top
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <>
-      {/* Intro Section */}
-      <section className="px-4 py-16 bg-gradient-to-b from-foreground/5 to-foreground/10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="text-5xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
-              {home.greeting}
-            </h1>
-            <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto rounded-full my-6"></div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div
-              className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer"
-              onClick={scrollToTop}
-            >
-              <div className="flex items-center mb-4">
-                <span className="text-3xl mr-3">🏠</span>
-                <h3 className="text-xl font-semibold">My Virtual Room</h3>
-              </div>
-              <p className="text-foreground/80">
+      {/* The room has had the whole screen above this, so the page does not
+          greet you a second time — it tells you where you have been standing. */}
+      <section className="border-b border-[var(--rule-soft)]">
+        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
+          <div className="grid gap-10 md:grid-cols-[1fr_minmax(0,20rem)] md:items-end">
+            <div>
+              <h1 className="u-display text-[clamp(2.5rem,7vw,4.5rem)]">
+                {home.greeting}
+              </h1>
+              <p className="u-lede mt-6 text-[1.0625rem] text-[var(--ink-soft)]">
                 {home.roomBlurb}
               </p>
             </div>
 
-            <div
-              className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer"
-              onClick={navigateToRandomTab}
-            >
-              <div className="flex items-center mb-4">
-                <span className="text-3xl mr-3">🧭</span>
-                <h3 className="text-xl font-semibold">Take a Tour</h3>
+            {/* A caption to the viewport above, rather than a card competing
+                with it. The "getting around" line is the one piece of
+                instruction left, and it points at controls that are now
+                visible instead of describing invisible ones. */}
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-[var(--rule-soft)] pt-6 md:border-t-0 md:pt-0">
+              <div>
+                <dt className="text-[0.8125rem] text-[var(--ink-soft)]">Place</dt>
+                <dd
+                  className="mt-1 text-[1.0625rem]"
+                  style={{ fontVariationSettings: '"wdth" 106, "wght" 600' }}
+                >
+                  {chapter.city}
+                </dd>
               </div>
-              <p className="text-foreground/80">
-                Navigate through the tabs above to explore different corners of my space. Each section reveals a new perspective of my digital home. You may also press the cities in the timeline to travel through time and visit old Tariks.
-              </p>
-            </div>
-
-            <div
-              className="bg-white/5 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/10 transform transition-all hover:scale-[1.02] hover:shadow-xl md:col-span-2 cursor-pointer"
-              onClick={triggerProcrastinate}
-            >
-              <div className="flex items-center mb-4">
-                <span className="text-3xl mr-3">💻</span>
-                <h3 className="text-xl font-semibold">Procrastinate</h3>
+              <div>
+                <dt className="text-[0.8125rem] text-[var(--ink-soft)]">Years</dt>
+                <dd className="u-figures mt-1 text-[1.0625rem]">
+                  {from}&ndash;{to ?? 'now'}
+                </dd>
               </div>
-              <p className="text-foreground/80">
-                Feeling unproductive? Click this card or hit the <span className="font-mono px-2 py-1 rounded bg-red-500/10 text-red-500 font-semibold">Procrastinate</span> button in the 3D view to see exactly what I do instead of working. You might feel better about your own productivity habits!
-              </p>
-            </div>
+              <div className="col-span-2">
+                <dt className="text-[0.8125rem] text-[var(--ink-soft)]">
+                  Getting around
+                </dt>
+                <dd className="mt-1 text-[0.9375rem] leading-relaxed">
+                  The bar along the bottom points the camera at another corner
+                  of this room. The years up top take you somewhere I lived
+                  earlier.
+                </dd>
+              </div>
+            </dl>
           </div>
-
-          <p className="text-center text-lg italic mt-8 font-light">
-            Go ahead—click around, procrastinate a little. I won&apos;t tell your boss.
-            <br />
-            Disclaimer: There&apos;s only 1(one) rickroll in this website.
-          </p>
         </div>
       </section>
 
-      {/* Featured Projects */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Featured Projects</h2>
-            <p className="text-foreground/70 max-w-3xl mx-auto">
-              Here are some of the projects I&apos;ve worked on recently.
-              Feel free to explore and check out the details.
-            </p>
+      <section className="border-b border-[var(--rule-soft)]">
+        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+          <div className="mb-10 flex flex-wrap items-baseline justify-between gap-4">
+            <h2
+              className="text-[clamp(1.5rem,3vw,2rem)]"
+              style={{ fontVariationSettings: '"wdth" 112, "wght" 600' }}
+            >
+              Selected work
+            </h2>
+            <Link
+              href="/projects"
+              className="text-[0.9375rem] text-[var(--ink-soft)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline"
+            >
+              All {projects.length} projects
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {featuredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
@@ -140,50 +111,66 @@ export default function Home() {
               />
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="text-center mt-12">
-            <Link
-              href="/projects"
-              className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full font-medium transition-colors inline-block"
+      <section className="border-b border-[var(--rule-soft)]">
+        <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 sm:py-20 md:grid-cols-2 md:items-center">
+          <div className="order-2 md:order-1">
+            <h2
+              className="text-[clamp(1.5rem,3vw,2rem)]"
+              style={{ fontVariationSettings: '"wdth" 112, "wght" 600' }}
             >
-              View All Projects
+              About me
+            </h2>
+            {home.aboutPreview.map((paragraph, i) => (
+              <p
+                key={i}
+                className="u-lede mt-5 text-[1.0625rem] text-[var(--ink-soft)]"
+              >
+                {paragraph}
+              </p>
+            ))}
+            <Link
+              href="/about"
+              className="mt-8 inline-block border-b-2 border-[var(--live)] pb-1 text-[0.9375rem] transition-colors hover:text-[var(--live)]"
+              style={{ fontVariationSettings: '"wdth" 102, "wght" 550' }}
+            >
+              More about me
             </Link>
+          </div>
+
+          <div className="order-1 md:order-2">
+            <div className="relative aspect-[4/5] overflow-hidden bg-[var(--plaster-deep)]">
+              <Image
+                src={home.photo}
+                alt="Tarik Isildar"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 40vw"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* About Me Preview */}
-      <section className="py-16 px-4 bg-foreground/5">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div className="order-2 md:order-1">
-              <h2 className="text-3xl font-bold mb-6">About Me</h2>
-              {home.aboutPreview.map((paragraph, i) => (
-                <p key={i} className="text-foreground/70 mb-6 last:mb-8">
-                  {paragraph}
-                </p>
-              ))}
-              <Link
-                href="/about"
-                className="border border-primary hover:bg-primary hover:text-white text-primary px-6 py-3 rounded-full font-medium transition-colors inline-block"
-              >
-                Learn More About Me
-              </Link>
-            </div>
-
-            <div className="order-1 md:order-2 relative">
-              <div className="aspect-square rounded-lg overflow-hidden relative bg-foreground/10">
-                {/* Personal photo */}
-                <Image
-                  src={home.photo}
-                  alt="Profile photo"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
+      {/* The one joke on the page, as an aside rather than a third identical
+          card competing with the real content. */}
+      <section>
+        <div className="mx-auto max-w-6xl px-6 py-14">
+          <p className="u-lede text-[1.0625rem] text-[var(--ink-soft)]">
+            Feeling unproductive?{' '}
+            <button
+              onClick={triggerProcrastinate}
+              className="border-b-2 border-[var(--live)] pb-0.5 text-[var(--ink)] transition-colors hover:text-[var(--live)] focus:outline-none focus-visible:text-[var(--live)]"
+              style={{ fontVariationSettings: '"wdth" 102, "wght" 550' }}
+            >
+              Put something on the screen
+            </button>{' '}
+            and see what I do instead of working. There is exactly one rickroll
+            on this website.
+          </p>
         </div>
       </section>
     </>

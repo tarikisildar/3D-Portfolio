@@ -5,50 +5,128 @@
    blog and in ProjectCard rendered unstyled. */
 @plugin "@tailwindcss/typography";
 
+/* Neutralise the `dark:` variant.
+ *
+ * The palette is taken from the rooms and does not invert, but Tailwind's
+ * default dark variant still follows prefers-color-scheme — so every
+ * `dark:bg-gray-800` left over from the old theme was firing for anyone whose
+ * OS is set to dark, putting near-black cards on a plaster page. Binding the
+ * variant to a class that is never applied switches them all off at once,
+ * without having to find and strip several hundred of them by hand. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Palette sampled from the rooms themselves.
+   
+   The site is about three low-poly interiors, and those interiors are warm
+   plaster, wood and a grey-green that turns up on nearly every wall. Taking the
+   chrome's colours from the rooms is what lets the page background run straight
+   into the 3D viewport with no seam — the old design put a near-black page
+   under a warm-cream scene and the join read as a mistake.
+   
+   One hot colour, `live`, and it means exactly one thing: you are here.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --secondary: #6d28d9;
-  --accent: #f59e0b;
+  --plaster: #ede4d6;
+  --plaster-deep: #e3d8c6;
+  --plaster-lift: #f5efe4;
+  --rule: #a8a890;
+  --rule-soft: #c6c3b0;
+  --ink: #2e3338;
+  --ink-soft: #6b7076;
+  --live: #e4462a;
+
+  --background: var(--plaster);
+  --foreground: var(--ink);
+
+  /* Chrome that floats over the 3D viewport. Tinted from the plaster rather
+     than neutral grey, so it belongs to the room behind it. */
+  --veil: rgba(237, 228, 214, 0.82);
+  --veil-strong: rgba(237, 228, 214, 0.95);
+
+  --rail-h: 3.5rem;
+  --bar-h: 3.25rem;
+
+  /* Height of the 3D stage. Phones get a band rather than the whole screen:
+     the rooms are wide and low, so a tall frame is mostly empty sky above the
+     half-height walls, and content that arrives sooner helps people who did
+     not realise there was a page below. */
+  --stage-h: 62svh;
+
+  /* `primary` is kept as an alias so the ~57 existing bg-primary/text-primary
+     usages keep resolving while pages are migrated. It points at ink, not at
+     the accent: solid dark buttons read as architectural against plaster, and
+     `live` has one job — marking where you are. */
+  --primary: var(--ink);
+  --primary-dark: #1d2226;
+  --secondary: var(--ink-soft);
+  --accent: var(--live);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Without these, `bg-primary`, `text-primary`, `border-primary` and friends
-     are utilities Tailwind has never heard of, so they silently compute to
-     transparent. That was ~57 usages across every CTA, nav hover and active
-     state on the site. Tailwind v4 only knows a colour if it is declared here
-     as --color-*; defining --primary on :root alone is not enough. */
+  --color-plaster: var(--plaster);
+  --color-plaster-deep: var(--plaster-deep);
+  --color-plaster-lift: var(--plaster-lift);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-live: var(--live);
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-archivo);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Display type: the family's width axis is the design, not a second typeface. */
+.u-display {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-variation-settings: "wdth" 118, "wght" 620;
+  letter-spacing: -0.025em;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.u-lede {
+  font-variation-settings: "wdth" 104, "wght" 420;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+/* Tabular figures so year ranges line up wherever they appear. */
+.u-figures {
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: "wdth" 96, "wght" 500;
+}
+
+/* A hairline that reads as a drawing rule rather than a divider. */
+.u-rule {
+  border-color: var(--rule-soft);
+}
+
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #60a5fa;
-    --primary-dark: #3b82f6;
-    --secondary: #a78bfa;
-    --accent: #fbbf24;
+    --stage-h: 100svh;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-variation-settings: "wdth" 100;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* The old design inverted on prefers-color-scheme, which fought the warm rooms
+   and produced the near-black page this redesign removes. The palette is the
+   rooms' own, so it does not invert. */
 
 html,
 body {

@@ -40,10 +40,11 @@ function ProjectsWithParams() {
 
   // Get projects for the current category
   const categoryProjects = useMemo(() => {
-    if (selectedCategory === 'All') {
-      return projects;
-    }
-    return projects.filter(project => project.category === selectedCategory);
+    const projectsInCategory = selectedCategory === 'All'
+      ? [...projects]
+      : projects.filter(project => project.category === selectedCategory);
+
+    return projectsInCategory.sort((firstProject, secondProject) => secondProject.id - firstProject.id);
   }, [selectedCategory]);
 
   // Get all unique tags from the current category's projects
@@ -128,49 +129,50 @@ function ProjectsWithParams() {
 
   const tabContainerStyle = {
     display: 'flex',
-    justifyContent: 'center',
-    marginBottom: '3rem',
+    justifyContent: 'flex-start',
+    marginBottom: '1.75rem',
     position: 'relative' as const,
   };
 
   const tabButtonStyle = {
-    padding: '12px 32px',
-    fontSize: '18px',
-    fontWeight: '500' as const,
+    padding: '10px 0',
+    marginRight: '2rem',
+    fontSize: '1.0625rem',
+    fontVariationSettings: '"wdth" 100, "wght" 450',
     backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
     position: 'relative' as const,
-    color: 'var(--foreground)',
-    opacity: 0.6,
-    transition: 'color 0.3s ease',
+    color: 'var(--ink-soft)',
+    transition: 'color 0.2s ease',
   };
 
   const activeTabButtonStyle = {
     ...tabButtonStyle,
-    color: '#3b82f6', // primary blue color
+    color: 'var(--ink)',
+    fontVariationSettings: '"wdth" 104, "wght" 600',
   };
 
   const animatedUnderlineStyle = {
     position: 'absolute' as const,
     bottom: '0px',
     left: '0',
-    height: '3px',
-    backgroundColor: '#3b82f6',
+    height: '2px',
+    backgroundColor: 'var(--live)',
     transition: 'all 0.3s ease-in-out',
     ...underlineStyle,
   };
 
   return (
-    <main className="py-20 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Heading */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold mb-4">My Projects</h1>
-          <p className="text-foreground/70 max-w-3xl mx-auto">
-            Explore all of my projects below. You can filter by technology to find specific projects.
+    <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+      <div>
+        <header className="mb-12 border-b border-[var(--rule-soft)] pb-10">
+          <h1 className="u-display text-[clamp(2.25rem,5vw,3.5rem)]">Projects</h1>
+          <p className="u-lede mt-5 text-[1.0625rem] text-[var(--ink-soft)]">
+            Graphics, robotics and the occasional game. Narrow the list by what
+            it was built with.
           </p>
-        </div>
+        </header>
 
         {/* Tabs with Animated Underline */}
         <div style={tabContainerStyle}>
@@ -206,26 +208,28 @@ function ProjectsWithParams() {
         <div className={`filter-container transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
              style={{ minHeight: '60px' }}>
           {categoryTags.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mb-12 transition-all duration-300 ease-in-out">
+            <div className="flex flex-wrap gap-2 mb-12 transition-all duration-300 ease-in-out">
               <button
                 onClick={() => setSelectedTag('')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                aria-pressed={selectedTag === ''}
+                className={`rounded-full border px-3.5 py-1.5 text-[0.8125rem] transition-colors ${
                   selectedTag === ''
-                    ? 'bg-primary text-foreground shadow-md border-2 border-primary'
-                    : 'bg-foreground/5 hover:bg-foreground/10 text-foreground/70'
+                    ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--plaster)]'
+                    : 'border-[var(--rule-soft)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)] hover:text-[var(--ink)]'
                 }`}
               >
-                All
+                Everything
               </button>
 
               {categoryTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => setSelectedTag(tag)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  aria-pressed={selectedTag === tag}
+                  className={`rounded-full border px-3.5 py-1.5 text-[0.8125rem] transition-colors ${
                     selectedTag === tag
-                      ? 'bg-primary text-foreground shadow-md border-2 border-primary'
-                      : 'bg-foreground/5 hover:bg-foreground/10 text-foreground/70'
+                      ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--plaster)]'
+                      : 'border-[var(--rule-soft)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)] hover:text-[var(--ink)]'
                   }`}
                 >
                   {tag}

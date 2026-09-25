@@ -26,6 +26,36 @@ function ease(t: number): number {
 }
 
 /**
+ * Aspect the shots were framed at. Blender renders 16:9 by default and the
+ * cameras were composed looking through Numpad0, so that is what the framing
+ * was judged against.
+ */
+const AUTHORED_ASPECT = 16 / 9
+
+/**
+ * Vertical field of view is the wrong thing to hold constant.
+ *
+ * three's `fov` is vertical, so on a tall phone a shot authored for a wide
+ * viewport keeps its vertical extent and loses width — you end up looking at
+ * carpet with the furniture cropped off either side. Holding the *horizontal*
+ * field instead preserves the composition the room was actually framed with.
+ *
+ * Clamped, because a strict horizontal lock on a tall viewport solves to well
+ * over 100 degrees, which is both a fisheye and — with these dollhouse rooms —
+ * mostly empty background above the half-height walls. Past the clamp the shot
+ * is allowed to crop rather than distort.
+ */
+const MAX_ADAPTED_FOV = 62
+
+function fovForAspect(authoredFov: number, aspect: number): number {
+  if (!aspect || !Number.isFinite(aspect)) return authoredFov
+  const halfWidth = Math.tan((authoredFov * Math.PI) / 360) * AUTHORED_ASPECT
+  const adapted = (Math.atan(halfWidth / aspect) * 360) / Math.PI
+  // Never *narrower* than authored: on wide screens the shot stays as framed.
+  return Math.min(Math.max(adapted, authoredFov), MAX_ADAPTED_FOV)
+}
+
+/**
  * Frames can be far apart when the render loop is idling on demand, so a raw
  * delta after a long pause would consume an entire move in one step. Clamp to
  * roughly two frames at 30fps.
@@ -67,6 +97,8 @@ type CameraRigProps = {
 export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRigProps) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null)
   const invalidate = useThree((s) => s.invalidate)
+  // Shots are adapted to the viewport's real shape; see fovForAspect.
+  const aspect = useThree((s) => s.size.width / s.size.height)
 
   // Keep the latest callback in a ref so starting a move does not depend on the
   // parent memoising it.
@@ -100,7 +132,7 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     if (isFirstPlacement) {
       camera.position.copy(shot.position)
       camera.quaternion.copy(shot.quaternion)
-      camera.fov = shot.fov
+      camera.fov = fovForAspect(shot.fov, aspect)
       camera.updateProjectionMatrix()
       to.current = shot
       animating.current = false
@@ -141,7 +173,7 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     animating.current = true
     notify.current?.(true)
     invalidate()
-  }, [shot, immediate, invalidate])
+  }, [shot, immediate, invalidate, aspect])
 
   // Make sure the render loop is not left pinned open if we unmount mid-move.
   useEffect(() => () => notify.current?.(false), [])
@@ -178,14 +210,15 @@ export function CameraRig({ shot, immediate = false, onMovingChange }: CameraRig
     }
 
     camera.quaternion.slerpQuaternions(from.current.quaternion, target.quaternion, t)
-    camera.fov = from.current.fov + (target.fov - from.current.fov) * t
+    const targetFov = fovForAspect(target.fov, aspect)
+    camera.fov = from.current.fov + (targetFov - from.current.fov) * t
     camera.updateProjectionMatrix()
 
     if (raw >= 1) {
       // Land exactly on the shot rather than wherever easing left us.
       camera.position.copy(target.position)
       camera.quaternion.copy(target.quaternion)
-      camera.fov = target.fov
+      camera.fov = fovForAspect(target.fov, aspect)
       camera.updateProjectionMatrix()
       animating.current = false
       notify.current?.(false)

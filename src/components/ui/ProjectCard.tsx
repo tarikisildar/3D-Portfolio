@@ -343,7 +343,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       >
         {/* Main card that maintains 300px width when expanded */}
         <div
-          className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 ${
+          className={`relative bg-[var(--plaster-lift)] border border-[var(--rule-soft)] rounded-md overflow-hidden transition-all duration-300 ${
             isExpanded ? 'project-card-expanded' : 'hover:shadow-lg hover:translate-y-[-4px]'
           } ${isClosing ? 'project-card-closing' : ''} cursor-pointer`}
           style={{
@@ -374,7 +374,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   className="object-cover"
                 />
                 {/* Expand icon in the corner of image */}
-                <div className="absolute bottom-2 right-2 bg-black/60 text-white p-1.5 rounded-full">
+                <div className="absolute bottom-2 right-2 bg-[var(--veil-strong)] text-[var(--ink)] border border-[var(--rule-soft)] p-1.5 rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 3 21 3 21 9"></polyline>
                     <polyline points="9 21 3 21 3 15"></polyline>
@@ -419,7 +419,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   {project.tags.slice(0, 3).map((tag, index) => (
                     <span
                       key={index}
-                      className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded"
+                      className="border border-[var(--rule-soft)] text-[var(--ink-soft)] text-[0.75rem] px-2 py-0.5 rounded-full"
                     >
                       {tag}
                     </span>
@@ -429,17 +429,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 {/* View details button for non-expanded state */}
                 {!isExpanded && (
                   <button
-                    className="mt-2 text-primary font-medium flex items-center gap-1 hover:underline"
+                    className="mt-3 text-[0.9375rem] text-[var(--ink)] underline decoration-[var(--live)] decoration-2 underline-offset-4 hover:text-[var(--live)]"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCardClick();
                     }}
                   >
-                    View Details
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
+                    View details
                   </button>
                 )}
               </div>
@@ -447,7 +443,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               {isExpanded && (
                 <button
                   onClick={handleCloseClick}
-                  className="absolute top-2 right-2 p-1 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="absolute top-2 right-2 p-1 bg-[var(--veil-strong)] border border-[var(--rule-soft)] rounded-full hover:bg-[var(--plaster-lift)] transition-colors"
                 >
                   {/* Simple X icon, no dependencies */}
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -491,7 +487,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       {/* Expanded details section - takes full width and has card styling */}
       {isExpanded && (
         <div
-          className={`w-full mt-8 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-md p-6 ${
+          className={`w-full mt-8 transition-all duration-300 bg-[var(--plaster-lift)] border border-[var(--rule-soft)] rounded-md p-6 ${
             isClosing ? 'animate-fadeOut' : 'animate-fadeIn'
           }`}
         >
@@ -520,7 +516,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               target="_blank"
               rel="noopener noreferrer"
                   className={index === 0
-                    ? "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    ? "px-4 py-2 bg-[var(--ink)] text-[var(--plaster)] rounded-md hover:bg-[var(--primary-dark)] transition-colors"
                     : "px-4 py-2 border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   }
                   onClick={(e) => {
