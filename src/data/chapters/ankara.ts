@@ -23,10 +23,10 @@ export const ANKARA: Chapter = {
     rotation: [0, Math.PI / 4, 0],
   },
 
-  // Projects and the blog are shared across every chapter, so they stay
-  // reachable. About and CV are per-chapter writing that does not exist for
-  // this era yet, so they are left out rather than showing Munich's.
-  sections: ['home', 'projects', 'blog'],
+  // Projects, the CV and the blog are shared across every chapter, so they
+  // stay reachable. About is per-chapter writing that does not exist for this
+  // era yet, so it is left out rather than showing Munich's.
+  sections: ['home', 'projects', 'cv', 'blog'],
 
   content: {
     home: {
@@ -39,6 +39,6 @@ export const ANKARA: Chapter = {
       ],
       photo: '/images/tarik/me.jpg',
     },
-    // No about or cv: not written for this era yet.
+    // No about: not written for this era yet.
   },
 }

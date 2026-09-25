@@ -368,6 +368,99 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   CV city headings: the same title-block language as the stage, so a city on
+   the CV reads as the sheet you would travel to. The whole block is the
+   button; hover inverts it the way the room markers do.
+--------------------------------------------------------------------------- */
+.cv-city {
+  display: block;
+  border: 1px solid var(--ink);
+  background: var(--plaster-lift);
+  color: var(--ink);
+  padding: 12px 16px 14px;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.cv-city > span {
+  display: block;
+}
+.cv-city__sheet {
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-variation-settings: "wdth" 110, "wght" 500;
+}
+.cv-city__name {
+  margin-top: 8px;
+  /* Sized so the longest city (NUREMBERG) fits the 17rem column. */
+  font-size: clamp(1.5rem, 2.4vw, 1.75rem);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-variation-settings: "wdth" 118, "wght" 650;
+}
+.cv-city__years {
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.cv-city .cv-city__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 0.8125rem;
+  font-variation-settings: "wdth" 102, "wght" 560;
+}
+.cv-city__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--live);
+}
+.cv-city__arrow {
+  transition: transform 150ms ease;
+}
+
+.cv-city:not([aria-current]):not(:disabled):hover,
+.cv-city:not([aria-current]):focus-visible {
+  background: var(--ink);
+  color: var(--plaster);
+  outline: none;
+}
+.cv-city:not([aria-current]):not(:disabled):hover .cv-city__sheet,
+.cv-city:not([aria-current]):not(:disabled):hover .cv-city__years,
+.cv-city:not([aria-current]):focus-visible .cv-city__sheet,
+.cv-city:not([aria-current]):focus-visible .cv-city__years {
+  color: var(--rule-soft);
+}
+.cv-city:not([aria-current]):not(:disabled):hover .cv-city__action,
+.cv-city:not([aria-current]):focus-visible .cv-city__action {
+  border-top-color: rgba(237, 228, 214, 0.25);
+}
+.cv-city:hover .cv-city__arrow,
+.cv-city:focus-visible .cv-city__arrow {
+  transform: translateX(3px);
+}
+.cv-city[aria-current] {
+  cursor: default;
+}
+.cv-city:focus-visible {
+  outline: 2px solid var(--live);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-city,
+  .cv-city__arrow {
+    transition: none;
+  }
+}
+
 /* A hairline that reads as a drawing rule rather than a divider. */
 .u-rule {
   border-color: var(--rule-soft);

@@ -54,12 +54,6 @@ export const NUREMBERG: Chapter = {
     // Nuremberg-era copy — a new object, not a mutation of this one, or you will
     // edit Munich's past as well.
     about: nurembergAbout,
-    // TODO: point at the current CV once it is updated. Sharing Munich's link
-    // means the "then" and "now" CVs are identical.
-    cv: {
-      driveUrl:
-        'https://drive.google.com/file/d/1lECifvuwI0C0rcDrEyp-JhCZPJO3Hddc/view?usp=sharing',
-    },
   },
 
   // No fallbackShots on purpose. The six `shot_*` cameras are authored in

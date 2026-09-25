@@ -4,10 +4,11 @@ import type { PageType, Shot } from '@/components/three/shots'
 /**
  * The parts of the site that are specific to a time and place.
  *
- * Projects and the blog are deliberately *not* here: they are shared across
- * every chapter. Only the writing that dates — how you introduce yourself, your
- * bio, your CV — is versioned, so moving through the timeline is a look back at
- * who you were then.
+ * Projects, the blog and the CV are deliberately *not* here: they are shared
+ * across every chapter (the CV lives in src/data/cv.ts and is itself organised
+ * by chapter). Only the writing that dates — how you introduce yourself, your
+ * bio — is versioned, so moving through the timeline is a look back at who you
+ * were then.
  */
 export type ChapterContent = {
   home: {
@@ -22,11 +23,6 @@ export type ChapterContent = {
   }
   /** Omit if this chapter has no About section. */
   about?: AboutData
-  /** Omit if this chapter has no CV section. */
-  cv?: {
-    /** Standard Google Drive share URL; converted to an embed at render time. */
-    driveUrl: string
-  }
 }
 
 /**

@@ -250,8 +250,8 @@ export const ANKARA: Chapter = {
   id: 'ankara',
   // ...
   // no `model` yet
-  sections: ['home', 'projects', 'blog'],   // shared sections still work
-  content: { home: { /* ... */ } },         // no about/cv until written
+  sections: ['home', 'projects', 'cv', 'blog'],  // shared sections still work
+  content: { home: { /* ... */ } },              // no about until written
 }
 ```
 
@@ -268,6 +268,11 @@ blank sea.
 needs all five: a student flat might have no CV corner, an early chapter might
 just be a room with a story. Requiring every chapter to answer every section
 means authoring shots and writing content for sections that don't apply.
+
+**Add the place to the CV.** The CV is one shared page, organised by city, in
+`src/data/cv.ts`. Add a block with `chapter: '<id>'` and its jobs or studies;
+the city name, years and the train or flight between cities come from the
+chapter, and the city heading becomes a button that travels here.
 
 **Don't add `fallbackShots`.** That field exists only for Munich, whose shots
 predate the Blender workflow. New rooms author cameras instead.

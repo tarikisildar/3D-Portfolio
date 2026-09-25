@@ -44,10 +44,6 @@ export const MUNICH: Chapter = {
       photo: '/images/tarik/me.jpg',
     },
     about: munichAbout,
-    cv: {
-      driveUrl:
-        'https://drive.google.com/file/d/1lECifvuwI0C0rcDrEyp-JhCZPJO3Hddc/view?usp=sharing',
-    },
   },
 
   // Hand-tuned through the old on-screen debug panel, before shots moved into
