@@ -134,8 +134,10 @@
   padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid var(--rule-soft);
-  background: var(--veil-strong);
-  backdrop-filter: blur(6px);
+  /* Solid, and no backdrop-filter: WebKit does not repaint a backdrop-
+     filtered element when its :hover styles change, so in Safari the hover
+     state only showed up once a click forced a repaint. */
+  background: var(--plaster-lift);
   color: var(--ink);
   font-size: 0.75rem;
   line-height: 1;
