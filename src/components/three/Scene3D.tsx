@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Canvas } from '@react-three/fiber'
 import { Loader } from '@react-three/drei'
 
@@ -13,6 +13,7 @@ import { MapTransition } from './MapTransition'
 import { TravelSound } from './TravelSound'
 import { useChapter } from './ChapterContext'
 import { DrawingSheet, SheetHeading } from './DrawingSheet'
+import { DEFAULT_CHAPTER_ID } from '@/data/chapters'
 
 // Map paths to page types
 const getPageTypeFromPath = (path: string): PageType => {
@@ -96,7 +97,7 @@ export default function Scene3D() {
         style={{ bottom: '1rem' }}
       >
         <TravelSound />
-        <ProcrastinateControls />
+        <ProcrastinateControls page={currentPage} />
       </div>
 
       {/* Sits above the canvas and the controls: while travelling between
@@ -145,50 +146,63 @@ function RoomUnderConstruction() {
   )
 }
 
+const controlClass =
+  'pointer-events-auto rounded-full border border-[var(--rule-soft)] px-4 py-2 ' +
+  'bg-[var(--veil-strong)] text-[0.8125rem] text-[var(--ink)] backdrop-blur-md ' +
+  'transition-colors hover:bg-[var(--plaster-lift)] focus:outline-none ' +
+  'focus-visible:ring-2 focus-visible:ring-[var(--live)]'
+const controlType = { fontVariationSettings: '"wdth" 100, "wght" 550' }
+
 /**
  * The in-scene buttons, as ordinary DOM overlaying the canvas.
+ *
+ * There is always a way back from whatever the stage is showing, in the same
+ * place: "Back to work" from a video, "Back home" from a section. Once you
+ * have clicked into the CV on the table, the room itself offers no route back
+ * to the overview; the rail does, but the rail is not where you are looking.
  *
  * These used to be built with document.createElement and ~150 lines of inline
  * style assignments, then attached to a parent located by matching an inline
  * style string. They are just buttons.
  */
-function ProcrastinateControls() {
+function ProcrastinateControls({ page }: { page: PageType }) {
   const { active, start, exit, nextVideo } = useProcrastinate()
   const { chapter } = useChapter()
+  const router = useRouter()
 
   // The video plays on a screen in the room, from this chapter's own playlist.
   // No room or no clips means there is nothing to procrastinate with.
-  if (!chapter.model || !chapter.videos?.length) return null
+  const canProcrastinate = Boolean(chapter.model && chapter.videos?.length)
 
-  const base =
-    'pointer-events-auto rounded-full border border-[var(--rule-soft)] px-4 py-2 ' +
-    'text-[0.8125rem] backdrop-blur-md transition-colors focus:outline-none ' +
-    'focus-visible:ring-2 focus-visible:ring-[var(--live)]'
+  if (active) {
+    return (
+      <div className="flex gap-2">
+        <button onClick={exit} className={controlClass} style={controlType}>
+          Back to work
+        </button>
+        <button onClick={nextVideo} className={controlClass} style={controlType}>
+          Next video
+        </button>
+      </div>
+    )
+  }
+
+  const goHome = () =>
+    router.push(chapter.id === DEFAULT_CHAPTER_ID ? '/' : `/?era=${chapter.id}`)
 
   return (
     <div className="flex gap-2">
-      {active ? (
-        <>
-          <button
-            onClick={exit}
-            className={`${base} bg-[var(--veil-strong)] text-[var(--ink)] hover:bg-[var(--plaster-lift)]`}
-            style={{ fontVariationSettings: '"wdth" 100, "wght" 550' }}
-          >
-            Back to work
-          </button>
-          <button
-            onClick={nextVideo}
-            className={`${base} bg-[var(--veil-strong)] text-[var(--ink)] hover:bg-[var(--plaster-lift)]`}
-            style={{ fontVariationSettings: '"wdth" 100, "wght" 550' }}
-          >
-            Next video
-          </button>
-        </>
-      ) : (
+      {page !== 'home' && (
+        <button onClick={goHome} className={controlClass} style={controlType}>
+          <span aria-hidden className="mr-1.5">&larr;</span>
+          Back home
+        </button>
+      )}
+      {canProcrastinate && (
         <button
           onClick={() => start('button_click', 'room_scene')}
-          className={`${base} bg-[var(--veil-strong)] text-[var(--ink)] hover:bg-[var(--plaster-lift)]`}
-          style={{ fontVariationSettings: '"wdth" 100, "wght" 550' }}
+          className={controlClass}
+          style={controlType}
         >
           Procrastinate
         </button>
