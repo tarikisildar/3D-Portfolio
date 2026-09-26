@@ -10,6 +10,7 @@ import type { AboutData } from '@/data/about'
  * NVIDIA, Hacettepe and TUM. Worth rewriting.
  */
 const munichAbout: AboutData = {
+  profilePic: "/images/tarik/prague_1.png",
   name: "Tarik Isildar",
   title: "Computer Graphics & Robotics Specialist",
   bio: [

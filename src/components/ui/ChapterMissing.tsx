@@ -12,35 +12,57 @@ import { useChapter } from '@/components/three/ChapterContext'
  * render an empty page.
  */
 export function ChapterMissing({ section }: { section: string }) {
-  const { chapter, all, goTo } = useChapter()
+  const { chapter, all, pending, goTo } = useChapter()
+  const [from, to] = chapter.period
 
   const elsewhere = all.filter((c) => c.id !== chapter.id)
 
-  return (
-    <div className="mx-auto max-w-2xl py-24 text-center">
-      <h1 className="mb-4 text-3xl font-bold">Not part of this chapter</h1>
-      <p className="mb-10 text-lg text-foreground/70">
-        {section} isn&apos;t part of the {chapter.city} chapter
-        {chapter.period[0] ? ` (${chapter.period[0]}–${chapter.period[1] ?? 'now'})` : ''}.
-      </p>
+  const travel = (id: string) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    goTo(id)
+  }
 
-      <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-        {elsewhere.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => goTo(c.id)}
-            className="rounded-full bg-primary px-6 py-3 font-medium text-white transition-colors hover:bg-primary-dark"
+  return (
+    <section>
+      <div className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+        <h1 className="u-display text-[clamp(2rem,5vw,3.25rem)]">Not written yet</h1>
+        <p className="u-lede mt-4 text-[1.0625rem] text-[var(--ink-soft)]">
+          {section} isn&apos;t part of the {chapter.city} chapter ({from}&ndash;{to ?? 'now'})
+          yet. It is in these:
+        </p>
+
+        {/* The same city blocks the CV uses: a place you can travel to. */}
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {elsewhere.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => travel(c.id)}
+                disabled={pending !== null}
+                className="cv-city w-full text-left disabled:cursor-wait"
+              >
+                <span className="cv-city__name">{c.city}</span>
+                <span className="cv-city__years u-figures">
+                  {c.period[0]}&ndash;{c.period[1] ?? 'now'}
+                </span>
+                <span className="cv-city__action">
+                  Go to {c.city}
+                  <span aria-hidden className="cv-city__arrow">&rarr;</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-10 text-[0.9375rem]">
+          <Link
+            href="/"
+            className="border-b border-[var(--live)] pb-px transition-colors hover:text-[var(--live)]"
           >
-            Travel to {c.city}
-          </button>
-        ))}
-        <Link
-          href="/"
-          className="rounded-full border border-foreground/20 px-6 py-3 font-medium transition-colors hover:border-primary hover:text-primary"
-        >
-          Back to Home
-        </Link>
+            Back home
+          </Link>
+        </p>
       </div>
-    </div>
+    </section>
   )
 }

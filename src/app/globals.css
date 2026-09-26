@@ -461,6 +461,41 @@
   }
 }
 
+/* Long-form text (blog posts): the typography plugin's layout, in the
+   room's colours. Setting its variables once replaces a className override
+   on every Markdown element. */
+.u-prose {
+  --tw-prose-body: var(--ink);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-lead: var(--ink-soft);
+  --tw-prose-links: var(--ink);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-counters: var(--ink-soft);
+  --tw-prose-bullets: var(--rule);
+  --tw-prose-hr: var(--rule-soft);
+  --tw-prose-quotes: var(--ink-soft);
+  --tw-prose-quote-borders: var(--live);
+  --tw-prose-captions: var(--ink-soft);
+  --tw-prose-code: var(--ink);
+  --tw-prose-pre-code: var(--plaster);
+  --tw-prose-pre-bg: var(--ink);
+  --tw-prose-th-borders: var(--rule);
+  --tw-prose-td-borders: var(--rule-soft);
+}
+.u-prose :where(h2, h3, h4) {
+  font-variation-settings: "wdth" 110, "wght" 620;
+  letter-spacing: -0.01em;
+}
+.u-prose :where(a) {
+  text-decoration-color: var(--live);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition: color 150ms ease;
+}
+.u-prose :where(a):hover {
+  color: var(--live);
+}
+
 /* A hairline that reads as a drawing rule rather than a divider. */
 .u-rule {
   border-color: var(--rule-soft);
@@ -497,26 +532,7 @@ canvas {
   display: block;
 }
 
-/* For the interactive experience */
-.experience-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-}
 
-/* For content sections */
-.content-section {
-  position: relative;
-  z-index: 1;
-  background: rgba(var(--background-rgb), 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
-  padding: 2rem;
-  margin: 2rem 0;
-}
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {

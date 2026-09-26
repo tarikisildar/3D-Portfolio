@@ -5,6 +5,7 @@ import type { AboutData } from '@/data/about'
  *
  */
 const nurembergAbout: AboutData = {
+  profilePic: "/images/tarik/munich-marathon.jpg",
   name: "Tarik Isildar",
   title: "Software Engineer - Graphics",
   bio: [

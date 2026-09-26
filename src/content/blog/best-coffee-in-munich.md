@@ -1,3 +1,7 @@
+---
+date: 2024-06-10
+category: Travel & Food
+---
 # Best Coffee in Munich
 
 For the last few years, I am keeping a personal list for the cafes I often visit. I often try to see the cafes that have the claim to make a good coffee. This list is my personal ranking amongs them.
