@@ -92,8 +92,11 @@ export function HotspotMarkers({ hotspots, currentSection }: HotspotsProps) {
             position={hotspot.position}
             center
             // Markers belong to the UI, not the scene: constant screen size,
-            // and drawn over the room rather than scaled into it.
-            zIndexRange={[20, 10]}
+            // and drawn over the room rather than scaled into it. But under
+            // the stage's own chrome (title block at z 5, controls at z 10,
+            // the map at z 20): on a small screen a marker sliding under the
+            // title block should pass behind it, not cover it.
+            zIndexRange={[4, 1]}
           >
             <button
               ref={(el) => {

@@ -39,8 +39,8 @@ export function DrawingSheet({ view }: { view: PageType }) {
   const pad = (n: number) => String(n).padStart(2, '0')
 
   return (
-    // z-[5]: over the room, under the object markers (z 10–20), which have to
-    // stay readable where they cross the title block.
+    // z-[5]: over the room and its object markers (z 1–4), under the stage
+    // controls (z 10) and the map transition (z 20).
     <div aria-hidden className="sheet pointer-events-none absolute inset-0 z-[5]">
       <span className="sheet__crop sheet__crop--tl" />
       <span className="sheet__crop sheet__crop--tr" />
