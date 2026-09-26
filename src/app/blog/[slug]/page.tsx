@@ -9,8 +9,8 @@ export async function generateStaticParams() {
   return posts.map((post) => ({ slug: post.slug }))
 }
 
-// Anything not generated above is not a post.
-export const dynamicParams = false
+// No `dynamicParams = false` here: the dev server caches the list above, so a
+// post added while it runs would 404. Unknown slugs 404 via notFound() below.
 
 // In the Next 15 App Router, params is always a Promise.
 type Props = {
@@ -48,7 +48,7 @@ export default async function BlogPost({ params }: Props) {
             <span aria-hidden>&larr; </span>Blog
           </Link>
           {post.draft && (
-            <p className="mt-6 inline-block border border-[var(--live)] px-2 py-0.5 text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]">
+            <p className="mt-6 block w-fit border border-[var(--live)] px-2 py-0.5 text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]">
               Draft: not on the live site
             </p>
           )}

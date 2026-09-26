@@ -10,7 +10,7 @@ import { getAllBlogPosts, getPostMedia, MEDIA_TYPES, POSTS_DIR } from '@/utils/m
  * without a restart.
  */
 
-export const dynamicParams = false
+// Unknown files 404 in GET below; see the note in ../page.tsx on dynamicParams.
 
 export async function generateStaticParams() {
   const posts = await getAllBlogPosts()

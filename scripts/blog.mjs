@@ -215,9 +215,15 @@ async function check() {
       const size = fs.statSync(full).size
       const meta = await sharp(full).metadata()
       const side = Math.max(meta.width ?? 0, meta.height ?? 0)
-      if (side <= MAX_SIDE && size <= MAX_BYTES) continue
+      // Photo metadata can carry the GPS position it was taken at; nothing
+      // on the site needs it, so it goes even when the size is fine.
+      const hasMetadata = Boolean(meta.exif || meta.xmp || meta.iptc)
+      if (side <= MAX_SIDE && size <= MAX_BYTES && !hasMetadata) continue
       if (!fix) {
-        warn(slug, `${name} is ${Math.round(size / 1024)} KB, ${meta.width}x${meta.height}; run with --fix to shrink it`)
+        const why = side > MAX_SIDE || size > MAX_BYTES
+          ? `is ${Math.round(size / 1024)} KB, ${meta.width}x${meta.height}`
+          : 'has embedded photo metadata (can include location)'
+        warn(slug, `${name} ${why}; run with --fix`)
         continue
       }
       // rotate() applies the phone's orientation flag before it is dropped
