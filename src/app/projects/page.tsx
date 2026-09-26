@@ -249,14 +249,20 @@ function ProjectRow({
         aria-expanded={open}
         aria-controls={panelId}
         data-preview={open ? undefined : project.imageUrl}
-        className="group grid w-full grid-cols-[4rem_minmax(0,1fr)_1.25rem] items-center gap-x-4 py-5 text-left focus:outline-none md:grid-cols-[3rem_minmax(0,1fr)_13rem_5.5rem_1.25rem] md:gap-x-6"
+        className="group grid w-full grid-cols-[4rem_minmax(0,1fr)_1.25rem] items-center gap-x-4 py-5 text-left focus:outline-none md:grid-cols-[2.5rem_5.5rem_minmax(0,1fr)_13rem_5.5rem_1.25rem] md:gap-x-6"
       >
-        {/* Phones get the picture inline; with a mouse it follows the cursor. */}
-        <span className="relative aspect-square w-16 overflow-hidden bg-[var(--plaster-deep)] md:hidden">
-          <Image src={project.imageUrl} alt="" fill sizes="4rem" className="object-cover" />
-        </span>
+        {/* The number leads on wide screens; phones start with the picture. */}
         <span className="u-figures hidden text-[0.875rem] text-[var(--ink-soft)] md:block">
           {pad(number)}
+        </span>
+        <span className="relative aspect-square w-16 overflow-hidden bg-[var(--plaster-deep)] md:w-[5.5rem]">
+          <Image
+            src={project.imageUrl}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 4rem, 5.5rem"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         </span>
 
         <span className="min-w-0">
@@ -290,8 +296,9 @@ function ProjectRow({
       </button>
 
       {open && (
-        // Indented to the title column on wide screens (3rem number + 1.5rem gap).
-        <div id={panelId} role="region" aria-label={project.title} className="md:pl-[4.5rem]">
+        // Indented to the title column on wide screens: number and thumbnail
+        // columns (2.5rem + 5.5rem) plus their gaps (2 × 1.5rem).
+        <div id={panelId} role="region" aria-label={project.title} className="md:pl-[11rem]">
           <ProjectDetail project={project} onTool={onTool} />
         </div>
       )}
@@ -300,12 +307,12 @@ function ProjectRow({
 }
 
 /**
- * The picture for the row under the pointer, floating beside the cursor.
+ * A larger view of the row's picture under the pointer, floating beside the
+ * cursor; the row itself only has room for a thumbnail.
  *
  * One element for the whole list, driven by delegated pointer events and a
- * transform, so rows stay plain text and nothing re-renders as the mouse
- * moves. Only with a real hovering pointer: on touch there is no hover, and
- * rows show their picture inline instead.
+ * transform, so nothing re-renders as the mouse moves. Only with a real
+ * hovering pointer: on touch there is no hover, and the thumbnail is it.
  */
 function HoverPreview() {
   const ref = useRef<HTMLDivElement>(null)
