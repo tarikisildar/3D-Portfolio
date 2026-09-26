@@ -12,6 +12,11 @@ in the owner's words without inventing anything, `npm run posts:check -- --fix`
 until it passes, keep `draft: true` unless told to publish, then commit
 (`Add post: <title>`), push, and open a pull request. Merging publishes.
 
+Travel logs are posts with one `YYYY-MM-DD.md` file per day beside
+`index.md`; add a day with `npm run post:day -- <log> --place "…"` (pass
+`--date` when the day isn't today in the owner's time zone, and ask if
+unsure). Commit a day as `Log <log>: <date>`.
+
 ## Other guides
 
 - Adding a new place and room: `docs/adding-a-place.md`

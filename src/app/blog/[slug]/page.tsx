@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
-import { getBlogPostBySlug, getAllBlogPosts, formatPostDate, resolvePostUrl } from '@/utils/mdUtils'
+import { PostMarkdown } from '@/components/ui/PostMarkdown'
+import { getBlogPostBySlug, getAllBlogPosts, formatPostDate, formatEntryDate } from '@/utils/mdUtils'
 
 // Built once per deploy: a new post goes live with the deploy that adds it.
 export async function generateStaticParams() {
@@ -30,6 +28,14 @@ export default async function BlogPost({ params }: Props) {
   if (!post) notFound()
 
   const date = formatPostDate(post.date)
+  const isLog = post.entries.length > 0
+  const meta = isLog
+    ? [
+        `${post.entryCount} ${post.entryCount === 1 ? 'day' : 'days'}`,
+        post.updated && `updated ${formatPostDate(post.updated)}`,
+        post.category,
+      ]
+    : [date, post.category, post.readTime]
 
   return (
     <article>
@@ -48,30 +54,60 @@ export default async function BlogPost({ params }: Props) {
           )}
           <h1 className="u-display mt-6 text-[clamp(2rem,5vw,3.25rem)]">{post.title}</h1>
           <p className="u-figures mt-4 text-[0.875rem] text-[var(--ink-soft)]">
-            {[date, post.category, post.readTime].filter(Boolean).join(' · ')}
+            {meta.filter(Boolean).join(' · ')}
           </p>
         </div>
       </header>
 
-      {/* Typography plugin, recoloured to the room's palette in globals.css
-          (.u-prose) rather than overriding every element here. */}
-      <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-        <div className="u-prose prose prose-lg max-w-none">
-          <ReactMarkdown
-            rehypePlugins={[rehypeRaw]}
-            remarkPlugins={[remarkGfm]}
-            // Images and links written as ./photo.jpg belong to this post's
-            // folder; see resolvePostUrl.
-            urlTransform={(url) => resolvePostUrl(slug, url)}
-            components={{
-              // eslint-disable-next-line @next/next/no-img-element
-              img: ({ src, alt }) => <img src={src as string} alt={alt ?? ''} loading="lazy" />,
-            }}
-          >
-            {post.body}
-          </ReactMarkdown>
+      {post.body && (
+        <div className="mx-auto max-w-3xl px-6 pt-12 sm:pt-16">
+          <PostMarkdown slug={slug}>{post.body}</PostMarkdown>
         </div>
-      </div>
+      )}
+
+      {/* A travel log: one section per day, oldest first, the date and place
+          in the margin like a logbook. Each day has an anchor
+          (#2026-10-02) so a single day can be linked. */}
+      {isLog && (
+        <ol className="mx-auto max-w-3xl px-6 pt-8">
+          {post.entries.map((entry) => (
+            <li
+              key={entry.id}
+              id={entry.id}
+              className="scroll-mt-[calc(var(--bar-h)+1rem)] border-t border-[var(--rule-soft)] py-10 first:border-t-[var(--ink)]"
+            >
+              <header className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <a
+                  href={`#${entry.id}`}
+                  className="u-figures text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]"
+                >
+                  Day {entry.day}
+                </a>
+                <p className="u-figures text-[0.875rem] text-[var(--ink-soft)]">
+                  {formatEntryDate(entry.date)}
+                  {entry.place && <> &middot; {entry.place}</>}
+                </p>
+                {entry.draft && (
+                  <span className="text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]">Draft</span>
+                )}
+              </header>
+              {entry.title && (
+                <h2
+                  className="mt-2 text-[clamp(1.375rem,2.6vw,1.75rem)] leading-tight"
+                  style={{ fontVariationSettings: '"wdth" 110, "wght" 620' }}
+                >
+                  {entry.title}
+                </h2>
+              )}
+              <div className="mt-4">
+                <PostMarkdown slug={slug}>{entry.body}</PostMarkdown>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div className="pb-16" />
     </article>
   )
 }

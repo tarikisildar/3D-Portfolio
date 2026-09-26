@@ -31,12 +31,18 @@ export default async function Blog() {
                 className="group grid gap-2 py-10 focus:outline-none sm:grid-cols-[10rem_1fr] sm:gap-8"
               >
                 <p className="u-figures text-[0.875rem] text-[var(--ink-soft)] sm:pt-2">
-                  {formatPostDate(post.date) ?? 'Undated'}
+                  {/* A log is dated by its latest day: that is what is new. */}
+                  {formatPostDate(post.updated ?? post.date) ?? 'Undated'}
                 </p>
                 <div>
                   <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">
                     {post.draft && <span className="text-[var(--live)]">Draft · </span>}
-                    {[post.category, post.readTime].filter(Boolean).join(' · ')}
+                    {(post.entryCount
+                      ? [`Travel log · ${post.entryCount} ${post.entryCount === 1 ? 'day' : 'days'}`, post.category]
+                      : [post.category, post.readTime]
+                    )
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                   <h2
                     className="mt-1 text-[clamp(1.375rem,2.6vw,1.75rem)] leading-tight transition-colors group-hover:text-[var(--live)] group-focus-visible:text-[var(--live)]"
@@ -46,7 +52,9 @@ export default async function Blog() {
                   </h2>
                   <p className="u-lede mt-3 text-[1rem] text-[var(--ink-soft)]">{post.excerpt}</p>
                   <p className="mt-4 text-[0.9375rem]">
-                    <span className="border-b border-[var(--live)] pb-px">Read the post</span>
+                    <span className="border-b border-[var(--live)] pb-px">
+                      {post.entryCount ? 'Read the log' : 'Read the post'}
+                    </span>
                     <span aria-hidden className="ml-1 inline-block transition-transform group-hover:translate-x-1">
                       &rarr;
                     </span>

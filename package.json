@@ -10,6 +10,7 @@
     "models": "node scripts/optimize-models.mjs",
     "videos": "node scripts/compress-videos.mjs",
     "post": "node scripts/blog.mjs new",
+    "post:day": "node scripts/blog.mjs day",
     "posts:check": "node scripts/blog.mjs check",
     "models:check": "node scripts/visual-check.mjs",
     "lighting": "node scripts/lighting-lab.mjs"

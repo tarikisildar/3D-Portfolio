@@ -19,6 +19,17 @@ import path from 'path';
  *
  *   The first paragraph doubles as the excerpt on the blog index.
  *
+ * A post can also be a travel log: the same folder, plus one file per day
+ * named by its date, each with an optional header of its own:
+ *
+ *   src/content/blog/japan-2026/
+ *     index.md          the trip: title, intro, start date
+ *     2026-10-02.md     ---\nplace: Kyoto\n---\n what happened, photos
+ *     2026-10-03.md
+ *
+ * A second entry on the same day is 2026-10-03-evening.md. The log sorts on
+ * the blog by its latest entry.
+ *
  * `npm run post "Title"` creates one; `npm run posts:check` validates them.
  * The full procedure is in docs/writing-a-post.md.
  */
@@ -37,12 +48,32 @@ export type BlogPostMeta = {
   category?: string;
   draft: boolean;
   readTime: string;
+  /** Travel logs only: how many days have entries, and the date of the latest. */
+  entryCount: number;
+  updated?: string;
+};
+
+export type LogEntry = {
+  /** File name without .md; also the entry's anchor on the page. */
+  id: string;
+  date: string;
+  /** Day of the trip, counting the log's start date (or first entry) as 1. */
+  day: number;
+  place?: string;
+  title?: string;
+  draft: boolean;
+  body: string;
 };
 
 export type BlogPost = BlogPostMeta & {
   /** Markdown body, without the header and the title line. */
   body: string;
+  /** Day entries, oldest first. Empty for an ordinary post. */
+  entries: LogEntry[];
 };
+
+/** 2026-10-02.md, or 2026-10-02-evening.md for a second entry that day. */
+const ENTRY_FILE = /^(\d{4}-\d{2}-\d{2})(?:-[a-z0-9-]+)?\.md$/;
 
 /** Split a `---` header off the top of a file. Deliberately tiny: `key: value` lines only. */
 export function splitHeader(raw: string) {
@@ -56,7 +87,7 @@ export function splitHeader(raw: string) {
   return { fields, rest: raw.slice(match[0].length), hasHeader: true };
 }
 
-function parse(slug: string, raw: string): BlogPost {
+function parse(slug: string, raw: string): Omit<BlogPost, 'entries' | 'entryCount' | 'updated'> {
   const { fields, rest } = splitHeader(raw);
   const lines = rest.replace(/^\s+/, '').split('\n');
   const title = lines[0].replace(/^#\s+/, '').trim();
@@ -100,25 +131,78 @@ function allSlugs() {
     });
 }
 
-/** A post by slug, or null if there is none (or it is a draft on the live site). */
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  if (!/^[a-z0-9-]+$/.test(slug)) return null;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** A travel log's day entries, oldest first, drafts left out on the live site. */
+function readEntries(slug: string, startDate?: string): LogEntry[] {
+  const dir = path.join(POSTS_DIR, slug);
+  if (!fs.existsSync(path.join(dir, 'index.md'))) return [];
+  const entries = fs
+    .readdirSync(dir)
+    .filter((name) => ENTRY_FILE.test(name))
+    // By file name without .md: plain string order would put
+    // 2026-10-04-2.md before 2026-10-04.md ('-' sorts before '.').
+    .sort((a, b) => a.replace(/\.md$/, '').localeCompare(b.replace(/\.md$/, ''), 'en', { numeric: true }))
+    .map((name) => {
+      const { fields, rest } = splitHeader(fs.readFileSync(path.join(dir, name), 'utf8'));
+      return {
+        id: name.replace(/\.md$/, ''),
+        date: name.match(ENTRY_FILE)![1],
+        day: 0,
+        place: fields.place || undefined,
+        title: fields.title || undefined,
+        draft: fields.draft === 'true',
+        body: rest.trim(),
+      };
+    })
+    .filter((entry) => !entry.draft || SHOW_DRAFTS);
+
+  const start = Date.parse(startDate ?? entries[0]?.date ?? '');
+  for (const entry of entries) {
+    entry.day = Number.isNaN(start) ? 1 : Math.round((Date.parse(entry.date) - start) / DAY_MS) + 1;
+  }
+  return entries;
+}
+
+function load(slug: string): BlogPost | null {
   const file = fileFor(slug);
   if (!file) return null;
   const post = parse(slug, fs.readFileSync(file, 'utf8'));
+  const entries = readEntries(slug, post.date);
+  const words = [post.body, ...entries.map((e) => e.body)].join(' ').split(/\s+/).filter(Boolean).length;
+  // A log with no intro yet is described by its latest day.
+  const excerpt =
+    post.excerpt ||
+    (entries.at(-1)?.body.split(/\n\s*\n/).find((para) => para.trim() && !/^(#|!\[|<)/.test(para.trim()))?.trim() ?? '');
+  return {
+    ...post,
+    excerpt,
+    entries,
+    entryCount: new Set(entries.map((e) => e.date)).size,
+    updated: entries.at(-1)?.date,
+    readTime: `${Math.max(1, Math.round(words / 230))} min read`,
+  };
+}
+
+/** A post by slug, or null if there is none (or it is a draft on the live site). */
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  if (!/^[a-z0-9-]+$/.test(slug)) return null;
+  const post = load(slug);
+  if (!post) return null;
   return post.draft && !SHOW_DRAFTS ? null : post;
 }
 
-/** Every post, newest first; undated posts after dated ones. */
+/** Every post, newest first; a log counts from its latest entry; undated posts last. */
 export async function getAllBlogPosts(): Promise<BlogPostMeta[]> {
+  const latest = (p: BlogPostMeta) => p.updated ?? p.date ?? '';
   return allSlugs()
     .map((slug) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { body, ...meta } = parse(slug, fs.readFileSync(fileFor(slug)!, 'utf8'));
+      const { body, entries, ...meta } = load(slug)!;
       return meta;
     })
     .filter((post) => !post.draft || SHOW_DRAFTS)
-    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    .sort((a, b) => latest(b).localeCompare(latest(a)));
 }
 
 /** Files that sit next to a post's index.md: its images. */
@@ -147,6 +231,13 @@ export const MEDIA_TYPES: Record<string, string> = {
 export function resolvePostUrl(slug: string, url: string) {
   if (/^(?:[a-z]+:|\/|#)/i.test(url)) return url;
   return `/blog/${slug}/${url.replace(/^\.\//, '')}`;
+}
+
+/** '2026-10-02' -> 'Fri, 2 Oct'. For log entries, where the year is the trip's. */
+export function formatEntryDate(date: string) {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 }
 
 /** '2024-06-10' -> 'June 10, 2024'. Leaves anything else as written. */
