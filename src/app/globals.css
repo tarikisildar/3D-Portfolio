@@ -212,15 +212,8 @@
 }
 
 /* Hover answers "is this clickable?" before the click: the tag lifts off the
-   object, goes solid, and the ring lights up in the one hot colour.
-
-   [data-hover] is set from pointerenter/pointerleave in HotspotMarkers, as
-   well as relying on :hover. In real Chrome the :hover state on these
-   markers, which float over a WebGL canvas, was intermittent and could stay
-   stuck off after a click elsewhere, while the markers' own pointer events
-   kept arriving. */
+   object, goes solid, and the ring lights up in the one hot colour. */
 .hotspot:hover .hotspot__label,
-.hotspot[data-hover] .hotspot__label,
 .hotspot:focus-visible .hotspot__label {
   transform: translateY(-3px);
   background: var(--ink);
@@ -230,7 +223,6 @@
 }
 
 .hotspot:hover .hotspot__stem,
-.hotspot[data-hover] .hotspot__stem,
 .hotspot:focus-visible .hotspot__stem {
   /* Stretch to meet the lifted tag: 12px + 3px. */
   transform: scaleY(1.25);
@@ -239,7 +231,6 @@
 }
 
 .hotspot:hover .hotspot__ring,
-.hotspot[data-hover] .hotspot__ring,
 .hotspot:focus-visible .hotspot__ring {
   transform: scale(1.35);
   background: var(--live);
@@ -247,7 +238,6 @@
 }
 
 .hotspot:hover .hotspot__ring::after,
-.hotspot[data-hover] .hotspot__ring::after,
 .hotspot:focus-visible .hotspot__ring::after {
   border-color: var(--live);
   animation-duration: 1.2s;
