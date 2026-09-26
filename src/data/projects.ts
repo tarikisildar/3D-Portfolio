@@ -10,6 +10,8 @@ export interface DetailedContent {
   height?: string
   scalePercent?: number
   aspectRatio?: string
+  /** Video only: still shown before playback. Defaults to the frame `npm run videos` writes. */
+  poster?: string
 }
 
 export interface ProjectLink {

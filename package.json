@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "models": "node scripts/optimize-models.mjs",
+    "videos": "node scripts/compress-videos.mjs",
     "models:check": "node scripts/visual-check.mjs",
     "lighting": "node scripts/lighting-lab.mjs"
   },

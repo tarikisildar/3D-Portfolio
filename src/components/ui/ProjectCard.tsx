@@ -83,6 +83,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     return url.includes('drive.google.com');
   };
 
+  const isVideoFile = (url: string) => /\.(mp4|webm|m4v|mov)(\?.*)?$/i.test(url);
+
+  const isInstagramUrl = (url: string) => /(^|\.)instagram\.com\//i.test(url.replace(/^https?:\/\//, ''));
+
+  // `npm run videos` writes a poster frame for every video it compresses.
+  const posterFor = (url: string) => {
+    const match = url.match(/^\/videos\/([^/]+)\.[a-z0-9]+$/i);
+    return match ? `/videos/posters/${match[1]}.jpg` : undefined;
+  };
+
   const isYouTubeUrl = (url: string): boolean => {
     return url.includes('youtube.com') || url.includes('youtu.be');
   };
@@ -217,6 +227,61 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               </div>
             );
           }
+        }
+
+        // A video file shipped with the site (see `npm run videos`). Played
+        // with the browser's own player rather than an iframe, in its real
+        // shape: a portrait phone clip gets a portrait frame, capped in height
+        // so it fits on screen, instead of a letterbox the width of the page.
+        if (isVideoFile(content.content)) {
+          const ratio = content.aspectRatio || '16/9'
+          const [rw, rh] = ratio.split('/').map(Number)
+          const portrait = rh > rw
+          return (
+            <figure className="mb-4">
+              <div
+                className="mx-auto overflow-hidden rounded-lg bg-[var(--ink)]"
+                style={{
+                  aspectRatio: ratio,
+                  ...(portrait
+                    ? { height: 'min(75vh, 640px)', maxWidth: '100%' }
+                    : { width: content.scalePercent && !isMobile ? `${content.scalePercent}%` : '100%' }),
+                }}
+              >
+                <video
+                  src={content.content}
+                  poster={content.poster ?? posterFor(content.content)}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              {content.caption && (
+                <figcaption className="mt-2 text-center text-[0.8125rem] text-[var(--ink-soft)]">
+                  {content.caption}
+                </figcaption>
+              )}
+            </figure>
+          )
+        }
+
+        // Instagram does not allow its posts in a plain iframe, so an
+        // Instagram URL becomes a link rather than a broken embed. Prefer
+        // downloading the reel and pointing `content` at the file.
+        if (isInstagramUrl(content.content)) {
+          return (
+            <p className="mb-4">
+              <a
+                href={content.content}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-b border-[var(--live)] pb-px transition-colors hover:text-[var(--live)]"
+              >
+                {content.caption || 'Watch on Instagram'} &rarr;
+              </a>
+            </p>
+          )
         }
 
         // Default video embed

@@ -53,3 +53,6 @@ models-src/**/backups/
 
 # lighting-lab render output
 /.lighting-lab/
+
+# original videos; `npm run videos` writes the compressed copies to public/videos
+/media-src/
