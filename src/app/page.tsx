@@ -19,19 +19,16 @@ export default function Home() {
 
   const featuredProjects = projects.filter((project) => project.featured);
 
-  const handleProjectExpand = (projectId: number | null) => {
-    if (projectId) {
-      const project = projects.find(p => p.id === projectId);
-      if (project) {
-        // Up to the room, over to the projects shot, then down to the card
-        // opened on the projects page: see useStageNavigation.
-        const era = chapter.id === DEFAULT_CHAPTER_ID ? '' : `&era=${chapter.id}`;
-        navigate(
-          `/projects?project=${project.slug}${era}`,
-          () => document.querySelector(`#project-${project.slug}[data-expanded="true"]`)
-        );
-      }
-    }
+  const openProject = (projectId: number) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    // Up to the room, over to the projects shot, then down to the project
+    // opened on the projects page: see useStageNavigation.
+    const era = chapter.id === DEFAULT_CHAPTER_ID ? '' : `&era=${chapter.id}`;
+    navigate(
+      `/projects?project=${project.slug}${era}`,
+      () => document.querySelector(`#project-${project.slug}[data-expanded="true"]`)
+    );
   };
 
   const triggerProcrastinate = () => {
@@ -93,8 +90,7 @@ export default function Home() {
               <ProjectCard
                 key={project.id}
                 project={project}
-                isExpanded={false}
-                onExpand={handleProjectExpand}
+                onOpen={openProject}
               />
             ))}
           </div>

@@ -50,7 +50,7 @@ const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 /** Smooth-scroll and resolve when it arrives (or gives up after `max` ms). */
-async function glideTo(top: number, max = 1500) {
+export async function glideTo(top: number, max = 1500) {
   const target = Math.max(0, Math.min(top, document.documentElement.scrollHeight - window.innerHeight))
   window.scrollTo({ top: target, behavior: 'smooth' })
   const start = performance.now()
@@ -68,7 +68,7 @@ async function glideTo(top: number, max = 1500) {
   }
 }
 
-async function findFocus(focus: Focus, within = 2500) {
+export async function findFocus(focus: Focus, within = 2500) {
   const get = typeof focus === 'string' ? () => document.getElementById(focus) : focus
   const start = performance.now()
   while (performance.now() - start < within) {
@@ -80,7 +80,7 @@ async function findFocus(focus: Focus, within = 2500) {
 }
 
 /** Where to scroll so `el` sits just under the top bar (--bar-h, in rem). */
-function topFor(el: Element) {
+export function topFor(el: Element) {
   const root = getComputedStyle(document.documentElement)
   const bar = parseFloat(root.getPropertyValue('--bar-h')) * parseFloat(root.fontSize) || 52
   return el.getBoundingClientRect().top + window.scrollY - bar - 16
