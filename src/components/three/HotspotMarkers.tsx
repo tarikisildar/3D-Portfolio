@@ -101,6 +101,14 @@ export function HotspotMarkers({ hotspots, currentSection }: HotspotsProps) {
                 else buttons.current.delete(key)
               }}
               onClick={activate}
+              // Hover driven by the marker's own pointer events as well as
+              // CSS :hover; see the note on .hotspot[data-hover].
+              onPointerEnter={(e) => {
+                if (e.pointerType !== 'touch') e.currentTarget.dataset.hover = ''
+              }}
+              onPointerLeave={(e) => {
+                delete e.currentTarget.dataset.hover
+              }}
               aria-label={hotspot.label}
               className="hotspot group"
               type="button"
