@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { getAllBlogPosts, formatPostDate } from '@/utils/mdUtils'
 
-// Server component: reads the Markdown files at request time.
-export const dynamic = 'force-dynamic'
+// Built once per deploy, like the posts: a new post goes live with the
+// deploy that adds it.
 
 export default async function Blog() {
   const posts = await getAllBlogPosts()
@@ -35,6 +35,7 @@ export default async function Blog() {
                 </p>
                 <div>
                   <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                    {post.draft && <span className="text-[var(--live)]">Draft · </span>}
                     {[post.category, post.readTime].filter(Boolean).join(' · ')}
                   </p>
                   <h2
