@@ -1,15 +1,16 @@
 'use client'
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import ProjectCard from "@/components/ui/ProjectCard";
 import projects from "@/data/projects";
 import Image from "next/image";
 import { useProcrastinate } from '@/components/three/ProcrastinateContext';
 import { useChapter } from '@/components/three/ChapterContext';
+import { useStageNavigation } from '@/components/three/useStageNavigation';
+import { DEFAULT_CHAPTER_ID } from '@/data/chapters';
 
 export default function Home() {
-  const router = useRouter();
+  const navigate = useStageNavigation();
   const { start: startProcrastinating } = useProcrastinate();
   // Landing copy is per chapter: the greeting, the description of *this* room,
   // and the About teaser all belong to the era you are standing in.
@@ -22,7 +23,13 @@ export default function Home() {
     if (projectId) {
       const project = projects.find(p => p.id === projectId);
       if (project) {
-        router.push(`/projects?project=${project.slug}`);
+        // Up to the room, over to the projects shot, then down to the card
+        // opened on the projects page: see useStageNavigation.
+        const era = chapter.id === DEFAULT_CHAPTER_ID ? '' : `&era=${chapter.id}`;
+        navigate(
+          `/projects?project=${project.slug}${era}`,
+          () => document.querySelector(`#project-${project.slug}[data-expanded="true"]`)
+        );
       }
     }
   };

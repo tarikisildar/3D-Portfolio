@@ -12,6 +12,7 @@ import type { Chapter } from '@/data/chapters'
 import { RoomLighting } from './RoomLighting'
 import { extractHotspots, type Hotspot } from './hotspots'
 import { HotspotMarkers } from './HotspotMarkers'
+import { setStageMoving } from './stageStatus'
 
 // Where the room sits, which model to load and any pre-Blender fallback shots
 // all come from the active chapter now — see src/data/chapters.ts. Camera shots
@@ -241,6 +242,12 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   useEffect(() => {
     onBusyChange?.(busy)
   }, [busy, onBusyChange])
+
+  // Published for page-level choreography (useStageNavigation), which waits
+  // for the camera to land before scrolling the content.
+  useEffect(() => {
+    setStageMoving(cameraMoving)
+  }, [cameraMoving])
 
   if (!roomModel) return null;
 

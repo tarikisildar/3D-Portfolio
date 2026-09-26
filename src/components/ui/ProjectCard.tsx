@@ -400,7 +400,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   }
 
   return (
-    <div className={`${isExpanded ? 'expanded-project-container col-span-full' : ''}`}>
+    <div
+      // Anchor for arriving from elsewhere: useStageNavigation scrolls to
+      // this once the card has opened.
+      id={`project-${project.slug}`}
+      data-expanded={isExpanded ? 'true' : undefined}
+      className={`${isExpanded ? 'expanded-project-container col-span-full' : ''}`}
+    >
       <div
         className={`flex flex-col md:flex-row items-start gap-6 w-full ${
           isExpanded ? 'justify-start' : ''
