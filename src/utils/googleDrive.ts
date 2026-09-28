@@ -8,10 +8,15 @@ import crypto from 'crypto';
  *
  * Configuration (Vercel project settings, or .env.local):
  *   BLOG_DRIVE_FOLDER_ID          the "Blog" folder's id, from its URL
- *   GOOGLE_SERVICE_ACCOUNT_KEY    the service account's JSON key, as is or
- *                                 base64-encoded
- * The folder must be shared with the service account's email (Viewer).
- * Setup steps: docs/writing-a-post.md.
+ * and one way in:
+ *   GOOGLE_API_KEY                an API key, for a folder shared as "Anyone
+ *                                 with the link: Viewer" (simplest; the
+ *                                 folder is then readable by anyone who has
+ *                                 its link)
+ *   GOOGLE_SERVICE_ACCOUNT_KEY    or a service account's JSON key (as is or
+ *                                 base64), for a folder shared only with that
+ *                                 account's email (private)
+ * The service account wins if both are set. Setup: docs/writing-a-post.md.
  */
 
 const API = 'https://www.googleapis.com/drive/v3';
@@ -30,7 +35,9 @@ export type DriveFile = {
 type ServiceAccount = { client_email: string; private_key: string };
 
 export function driveConfigured() {
-  return Boolean(process.env.BLOG_DRIVE_FOLDER_ID && process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+  return Boolean(
+    process.env.BLOG_DRIVE_FOLDER_ID && (process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_API_KEY)
+  );
 }
 
 export function rootFolderId() {
@@ -78,7 +85,16 @@ async function accessToken() {
 }
 
 async function get(url: string) {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${await accessToken()}` } });
+  let res: Response;
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    res = await fetch(url, { headers: { Authorization: `Bearer ${await accessToken()}` } });
+  } else {
+    // Link-shared folder: the key identifies the app; the sharing grants access.
+    const withKey = new URL(url);
+    withKey.searchParams.set('key', process.env.GOOGLE_API_KEY!);
+    res = await fetch(withKey);
+  }
+  // The URL without the key, so it never ends up in logs.
   if (!res.ok) throw new Error(`Drive request failed: ${res.status} ${url}`);
   return res;
 }

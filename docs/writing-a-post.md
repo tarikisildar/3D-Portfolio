@@ -101,28 +101,44 @@ What Claude should do:
 
 ## One-time setup
 
-The site reads Drive as a **service account**: a robot Google account that
-can only see what you share with it.
+Both ways start the same: in the
+[Google Cloud console](https://console.cloud.google.com/), create a project
+(or pick one) and enable the **Google Drive API** for it. Then create the
+**Blog** folder in Drive; its id is the last part of its URL
+(`drive.google.com/drive/folders/<this>`).
 
-1. In the [Google Cloud console](https://console.cloud.google.com/), create
-   a project (or pick one) and enable the **Google Drive API** for it.
-2. *IAM & Admin → Service accounts → Create*, e.g. `portfolio-blog`. No roles
+### Option A: link sharing and an API key (simplest)
+
+1. Share the Blog folder as **Anyone with the link: Viewer**.
+2. In the Cloud console, *APIs & Services → Credentials → Create credentials
+   → API key*. Restrict it to the Google Drive API.
+3. In Vercel, *Project → Settings → Environment Variables*:
+   - `BLOG_DRIVE_FOLDER_ID`: the folder id
+   - `GOOGLE_API_KEY`: the key
+
+The catch: anyone who has the folder's link can open everything in it,
+including drafts and the **original photos with their metadata** (which can
+include where they were taken). The site never shows the link, and it strips
+metadata from the photos it serves, but the originals in the folder keep it.
+
+### Option B: a service account (private folder)
+
+1. *IAM & Admin → Service accounts → Create*, e.g. `portfolio-blog`. No roles
    needed. Open it, *Keys → Add key → JSON*: a key file downloads.
-3. In Google Drive, create the **Blog** folder and *Share* it with the service
-   account's email (`portfolio-blog@<project>.iam.gserviceaccount.com`) as
-   **Viewer**.
-4. Open the folder; its id is the last part of the URL
-   (`drive.google.com/drive/folders/<this>`).
-5. In Vercel, *Project → Settings → Environment Variables*, add:
+2. *Share* the Blog folder with the service account's email
+   (`portfolio-blog@<project>.iam.gserviceaccount.com`) as **Viewer**. The
+   folder stays private otherwise.
+3. In Vercel:
    - `BLOG_DRIVE_FOLDER_ID`: the folder id
    - `GOOGLE_SERVICE_ACCOUNT_KEY`: the whole JSON key file's contents (or the
      same, base64-encoded)
 
-   Then redeploy once. To see Drive posts in `npm run dev` too, put the same
-   two lines in `.env.local` (git ignores it).
+Treat the key file like a password.
 
-Treat the key file like a password: it only reads what you shared with it,
-but don't commit it or post it anywhere.
+### Either way
+
+Redeploy once after adding the variables. To see Drive posts in
+`npm run dev` too, put the same lines in `.env.local` (git ignores it).
 
 ## Local posts
 
