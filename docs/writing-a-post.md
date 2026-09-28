@@ -1,153 +1,132 @@
 # Writing a blog post
 
-Each post is a folder in `src/content/blog/`. The folder name is the URL.
+Posts live in a **Google Drive folder**, not in this repo. The site reads the
+folder directly and refreshes every five minutes, so writing or editing a
+post needs no commit and no deploy.
+
+(Without the Drive settings, e.g. running locally with nothing configured,
+the site reads `src/content/blog/` in the repo instead, in the same format.)
 
 ```
-src/content/blog/best-running-routes/
-  index.md        the post
-  pegnitz.jpg     its images, next to it
+Blog/                              the folder the site reads
+  Best Coffee in Munich/           one folder per post; its name is the URL
+    index                          Google Doc: the post
+  Berlin to Istanbul/              a travel log
+    index                          Google Doc: the trip's intro
+    2026-09-26                     Google Doc: a day
+    2026-09-27                     Google Doc: a day
+    2026-09-27 evening             a second entry that day
+    race.jpg, medal.jpg            photos, straight from the phone
 ```
 
-## 1. Start it
+The folder name becomes the URL: "Berlin to Istanbul" is
+`/blog/berlin-to-istanbul`. Renaming a folder changes its URL.
 
-```bash
-npm run post -- "Best running routes" --category "Running"
+## Writing a post
+
+A Google Doc named **index** inside the post's folder:
+
 ```
-
-This creates the folder and an `index.md` with today's date, marked as a
-draft:
-
-```markdown
----
-date: 2026-09-26
+date: 2026-10-12
 category: Running
 draft: true
----
-# Best running routes
 
-The first paragraph is the excerpt on the blog index. Write it last.
+Best running routes              ← the title: the first line after the header
+                                   (Heading 1 or plain text, either works)
+The first paragraph is the excerpt shown on the blog list.
+
+More text, **bold**, lists, links: normal Doc formatting.
+
+photo: pegnitz.jpg | The loop along the Pegnitz at 7am
 ```
 
-`category` is optional. `date` is `YYYY-MM-DD` and orders the blog, newest
-first.
+- The header lines at the top are all optional. `date` is `YYYY-MM-DD` and
+  orders the blog. `draft: true` keeps the post off the live site; delete
+  the line to publish.
+- **Photos:** upload them into the post's folder (on the phone: *Share →
+  Drive*, pick the folder), then add a line `photo: <file name> | <caption>`
+  where it should appear. Several `photo:` lines in a row become a grid.
+  Photos can come straight off the phone: the site shrinks them and removes
+  their metadata (including location) when it serves them.
+- iPhone photos in HEIC format may not display; if one doesn't, set the
+  camera to *Most Compatible* or export it as JPEG.
 
-## 2. Write it
+## A travel log
 
-Plain Markdown. The first paragraph after the title is what the blog index
-shows under the title, so make it a sentence that makes someone want to
-click.
-
-**Images** go in the post's folder and are referenced relative to it:
-
-```markdown
-![The loop along the Pegnitz at 7am](./pegnitz.jpg)
-```
-
-Use short names without spaces. Phone photos are fine as they come; the
-check below shrinks them.
-
-## 3. Check it
-
-```bash
-npm run posts:check -- --fix
-```
-
-Fails if a header is malformed, a date is wrong, the title line is missing,
-or the post uses an image that isn't in its folder. Warns about images that
-aren't used. `--fix` shrinks big images to at most 2000px (JPEG quality 80)
-and strips their location data; without `--fix` it only reports them.
-
-## 4. Preview it
-
-`npm run dev` and open `/blog`. Drafts show up locally with a red **Draft**
-label; they never appear on the live site.
-
-## 5. Publish it
-
-Delete the `draft: true` line, commit, and push. The post goes live with the
-next deploy.
-
----
-
-## Travel logs
-
-A trip you add to as it happens: one post, with a short entry per day.
-
-```bash
-npm run post -- "Japan 2026" --log --category Travel
-npm run post:day -- japan-2026 --place "Tokyo"
-npm run post:day -- japan-2026 --place "Kyoto" --title "Up the mountain before breakfast"
-```
-
-That gives:
+A post folder with day Docs beside its `index`. Each day is a Doc **named by
+its date**, `2026-09-27` (a second one that day: `2026-09-27 evening`):
 
 ```
-src/content/blog/japan-2026/
-  index.md          the trip: title, a line or two of intro, start date
-  2026-10-02.md     Day 1
-  2026-10-04.md     Day 3 (days are counted from the start date)
-  2026-10-04-2.md   a second entry the same day
-  inari.jpg …       photos for any day, all in the one folder
+place: Berlin
+title: Race day                  (optional)
+
+It was difficult. But I finished in 4 hours 41 minutes…
+
+photo: race.jpg | Somewhere on the course
+photo: medal.jpg | The medal
 ```
 
-A day file is just Markdown, with an optional header:
+Days are numbered from the log's `date`. The blog lists the trip by its
+latest day, so adding a day brings it back to the top. Each day has a link of
+its own: `/blog/berlin-to-istanbul#2026-09-27`. A single day can be held back
+with `draft: true`.
 
-```markdown
----
-place: Kyoto
-title: Up the mountain before breakfast
----
-Fushimi Inari at 6am, before the crowds.
+## When it shows up
 
-![The gates](./inari-gates.jpg)
-![Halfway up](./inari-steps.jpg)
-![The view](./inari-top.jpg)
-```
-
-Images on consecutive lines become a photo grid; one on its own shows full
-width. `post:day` uses today's date unless you pass `--date 2026-10-02`.
-
-On the blog the trip is listed as a travel log, dated by its latest day, so
-adding a day moves it back to the top. Each day has its own link:
-`/blog/japan-2026#2026-10-04`. Publish the trip once (remove `draft: true`
-from `index.md`) and every day you add after that goes live with the next
-deploy. A single day can be held back with `draft: true` in its own header.
-
----
+Within about five minutes of saving. Nothing to commit or deploy.
 
 ## Posting from Claude on your phone
 
-The steps above are what Claude follows too; `CLAUDE.md` points at this
-section. The short version of what to ask for:
+Claude can create and edit the Docs through the Google Drive connector. It
+cannot upload photos, so photos go in through the Drive app.
 
-> Write a blog post called "…", category "…". Here is what I want to say: …
-> Publish it. / Leave it as a draft.
+Ask for something like:
 
-or, for a trip:
+> Add today to the Berlin to Istanbul log in my Blog folder. Place: Berlin.
+> Here's what happened: … I uploaded race.jpg and medal.jpg.
 
-> Add today to the Japan log. We're in Kyoto. Here's what happened: …
-> (photos attached, or: I uploaded inari-1.jpg and inari-2.jpg)
+What Claude should do:
 
-What Claude does:
+1. Find `Blog/<post>/` in Drive (for a new post, create the folder and an
+   `index` Doc).
+2. For a log day, create a Doc named with the date (ask if it isn't clear
+   which day, or which time zone).
+3. Write in your words: tidy, don't invent facts, places or opinions.
+4. Put `place:` (and `title:` if given) at the top, then the text, then a
+   `photo: <file> | <caption>` line for each photo you uploaded, using the
+   exact file names in the folder.
+5. Leave `draft: true` in a new post's `index` unless you said to publish.
 
-1. Branches off `master` as `post/<slug>` (for a log day,
-   `post/<log>-<date>`).
-2. Runs `npm ci` if dependencies are missing, then `npm run post`.
-3. Writes the post from what you said, in your words. It tidies, it does not
-   invent: no facts, places or opinions you didn't give it.
-   For a travel log day it runs `npm run post:day -- <log> --place "…"`
-   instead (with `--date` if you're writing about another day; the cloud
-   machine's clock may not be in your time zone, so it asks when unsure).
-4. Adds images, if any (see below).
-5. Runs `npm run posts:check -- --fix` and fixes anything it reports.
-6. Removes `draft: true` only if you said to publish.
-7. Commits as `Add post: <title>`, pushes the branch and opens a pull request.
-   Vercel comments on the pull request with a **preview link**. Open it on
-   your phone, and merge the pull request to publish.
+---
 
-**Photos.** Claude can see photos you attach in the chat, but may not be able
-to save them into the repo as files. If it can't, the dependable route is to
-upload them yourself: on github.com (or the GitHub app), open the
-`post/<slug>` branch, go to the post's folder, *Add file → Upload files*.
-Then tell Claude the file names, and it will place them in the post and run
-the check, which shrinks them.
+## One-time setup
+
+The site reads Drive as a **service account**: a robot Google account that
+can only see what you share with it.
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), create
+   a project (or pick one) and enable the **Google Drive API** for it.
+2. *IAM & Admin → Service accounts → Create*, e.g. `portfolio-blog`. No roles
+   needed. Open it, *Keys → Add key → JSON*: a key file downloads.
+3. In Google Drive, create the **Blog** folder and *Share* it with the service
+   account's email (`portfolio-blog@<project>.iam.gserviceaccount.com`) as
+   **Viewer**.
+4. Open the folder; its id is the last part of the URL
+   (`drive.google.com/drive/folders/<this>`).
+5. In Vercel, *Project → Settings → Environment Variables*, add:
+   - `BLOG_DRIVE_FOLDER_ID`: the folder id
+   - `GOOGLE_SERVICE_ACCOUNT_KEY`: the whole JSON key file's contents (or the
+     same, base64-encoded)
+
+   Then redeploy once. To see Drive posts in `npm run dev` too, put the same
+   two lines in `.env.local` (git ignores it).
+
+Treat the key file like a password: it only reads what you shared with it,
+but don't commit it or post it anywhere.
+
+## Local posts
+
+`src/content/blog/` uses the same layout, with `.md` files instead of Docs
+(`index.md`, `2026-09-27.md`). `npm run post` / `npm run post:day` scaffold
+them and `npm run posts:check -- --fix` validates them and shrinks photos.
+They're only used when Drive isn't configured.

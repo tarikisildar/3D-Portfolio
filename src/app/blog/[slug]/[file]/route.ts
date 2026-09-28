@@ -1,32 +1,54 @@
-import fs from 'fs'
-import path from 'path'
-import { getAllBlogPosts, getPostMedia, MEDIA_TYPES, POSTS_DIR } from '@/utils/mdUtils'
+import sharp from 'sharp'
+import { readPostBytes } from '@/utils/blogSource'
+import { getPostMediaFile } from '@/utils/mdUtils'
 
 /**
- * Serves the images that sit in a post's folder, at /blog/<slug>/<file>.
+ * A photo from a post's folder, at /blog/<slug>/<file name>.
  *
- * Pre-rendered at build like the posts themselves, so on the live site these
- * are plain static files; while developing, a newly added image works
- * without a restart.
+ * Photos arrive straight from a phone (via Drive) at full size with their
+ * metadata, so they are shrunk to at most 2000px, turned upright and
+ * stripped of metadata (which can include where they were taken) on the way
+ * out. The result is cached at the edge, so that happens once per photo.
  */
 
-// Unknown files 404 in GET below; see the note in ../page.tsx on dynamicParams.
+// Rendered on first request and cached, not listed at build: a photo added
+// to Drive later works without a deploy.
+export const revalidate = 86400
 
-export async function generateStaticParams() {
-  const posts = await getAllBlogPosts()
-  return posts.flatMap((post) => getPostMedia(post.slug).map((file) => ({ slug: post.slug, file })))
-}
+const MAX_SIDE = 2000
+const RESIZABLE = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif'])
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string; file: string }> }) {
   const { slug, file } = await params
-  // Only names that are actually in the folder; nothing like ../ can reach here.
-  if (!getPostMedia(slug).includes(file)) return new Response('Not found', { status: 404 })
+  const media = await getPostMediaFile(slug, decodeURIComponent(file))
+  if (!media) return new Response('Not found', { status: 404 })
 
-  const body = fs.readFileSync(path.join(POSTS_DIR, slug, file))
-  return new Response(body, {
+  let body: Buffer = await readPostBytes(media)
+  let type = media.mime
+
+  if (RESIZABLE.has(type)) {
+    try {
+      let img = sharp(body).rotate().resize({ width: MAX_SIDE, height: MAX_SIDE, fit: 'inside', withoutEnlargement: true })
+      // PNGs are usually screenshots: keep them sharp. Everything else,
+      // including an iPhone's HEIC, becomes a JPEG every browser shows.
+      if (type === 'image/png') {
+        img = img.png({ compressionLevel: 9 })
+      } else {
+        img = img.jpeg({ quality: 80, mozjpeg: true })
+        type = 'image/jpeg'
+      }
+      body = await img.toBuffer()
+    } catch (error) {
+      // A format this server's image library can't read: serve the original.
+      console.error(`Could not process ${slug}/${media.name}:`, error)
+      type = media.mime
+    }
+  }
+
+  return new Response(new Uint8Array(body), {
     headers: {
-      'Content-Type': MEDIA_TYPES[path.extname(file).toLowerCase()],
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Content-Type': type,
+      'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
     },
   })
 }

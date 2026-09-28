@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { getAllBlogPosts, formatPostDate } from '@/utils/mdUtils'
 
-// Built once per deploy, like the posts: a new post goes live with the
-// deploy that adds it.
+// Refreshed from Drive (or the repo) at most every five minutes; see the
+// post page.
+export const revalidate = 300
 
 export default async function Blog() {
   const posts = await getAllBlogPosts()

@@ -3,10 +3,19 @@ import { notFound } from 'next/navigation'
 import { PostMarkdown } from '@/components/ui/PostMarkdown'
 import { getBlogPostBySlug, getAllBlogPosts, formatPostDate, formatEntryDate } from '@/utils/mdUtils'
 
-// Built once per deploy: a new post goes live with the deploy that adds it.
+// Posts are fetched from Drive (or the repo) and cached for five minutes, so
+// an edit shows up on the live site within minutes, without a deploy.
+export const revalidate = 300
+
 export async function generateStaticParams() {
-  const posts = await getAllBlogPosts()
-  return posts.map((post) => ({ slug: post.slug }))
+  // Pre-render what exists at build time; if the source is unreachable, build
+  // anyway and render each post on its first visit instead.
+  try {
+    return (await getAllBlogPosts()).map((post) => ({ slug: post.slug }))
+  } catch (error) {
+    console.error('Could not list blog posts at build time:', error)
+    return []
+  }
 }
 
 // No `dynamicParams = false` here: the dev server caches the list above, so a
