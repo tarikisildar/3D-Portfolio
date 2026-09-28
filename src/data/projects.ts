@@ -1,3 +1,5 @@
+import { Video } from "lucide-react"
+
 export type ContentType = 'text' | 'image' | 'video' | 'pdf' | 'web'
 
 export interface DetailedContent {
@@ -8,6 +10,8 @@ export interface DetailedContent {
   height?: string
   scalePercent?: number
   aspectRatio?: string
+  /** Video only: still shown before playback. Defaults to the frame `npm run videos` writes. */
+  poster?: string
 }
 
 export interface ProjectLink {
@@ -32,7 +36,7 @@ export interface Project {
 
 const projects: Project[] = [
   {
-    id: 1,
+    id: 11,
     title: 'Master\'s Thesis: Real-Time Depth Completion for AVs',
     slug: 'thesis',
     description: 'A novel sensor fusion system combining camera and LiDAR data for generating high-fidelity point clouds for autonomous vehicle teleoperation.',
@@ -86,7 +90,7 @@ const projects: Project[] = [
     ]
   },
   {
-    id: 2,
+    id: 10,
     title: "Visualization System for Autonomous Vehicle Teleoperation",
     slug: "idp-interface",
     description: "Developed a real-time 3D visualization system for enhancing situational awareness in teleoperated autonomous vehicles, combining perception data with camera feeds.",
@@ -95,7 +99,7 @@ const projects: Project[] = [
     links: [
 
     ],
-    featured: true,
+    featured: false,
     category: 'Software',
     detailedContent: [
       {
@@ -118,10 +122,10 @@ const projects: Project[] = [
     ]
   },
   {
-    id: 10,
+    id: 9,
     title: "Police Simulator: Patrol Officers",
     slug: "police-simulator",
-    description: "An immersive law enforcement simulation game where players patrol accurately recreated city districts, enforce traffic laws, and investigate crime scenes. Recognized as one of the Top 5 Early Access Games of 2022 by Steam.",
+    description: "A Police officer simulation game where players patrol accurately recreated city districts, enforce traffic laws, and investigate crime scenes. Recognized as one of the Top 5 Early Access Games of 2022 by Steam.",
     imageUrl: "/images/police.jpg",
     tags: ["Unreal Engine 4", "C++"],
     links: [
@@ -234,7 +238,7 @@ const projects: Project[] = [
     ]
   },
   {
-    id: 7,
+    id: 3,
     title: "Trivia Race Playable Ad",
     slug: "trivia-race-ad",
     description: "A lightweight WebGL playable advertisement for Trivia Race mobile game with 5+ million downloads, optimized to fit within 1MB as a single HTML file.",
@@ -303,7 +307,7 @@ const projects: Project[] = [
     ]
   },
   {
-    id: 9,
+    id: 4,
     title: "Exerciser: AI-Powered Exercise Recognition Platform",
     slug: "Exerciser",
     description: "A comprehensive mobile platform that uses computer vision to recognize physical therapy exercises, provide real-time feedback, and facilitate doctor-patient communication for rehabilitation.",
@@ -343,7 +347,7 @@ const projects: Project[] = [
     ]
   },
   {
-    id: 11,
+    id: 1,
     title: "Hyper Casuals Portfolio",
     slug: "hyper-casuals",
     description: "A collection of 9 hyper-casual mobile games developed for Apps, optimized for engagement and retention with lightweight, addictive gameplay mechanics.",
@@ -419,8 +423,53 @@ const projects: Project[] = [
         caption: "Gold Mine",
         scalePercent: 75,
         aspectRatio: "16/9"
-      }
+      },
     ]
+  },
+  {
+    id: 12,
+    title: "Rhino is cool, But can it run doom?",
+    description: "On my new job at Adidas, they told me that I need to learn developping with a tool called Rhino/Grasshopper. Which is a 3D modeling and parametric design software that is used by the design team. I had some tasks like creating a tool there to implement a Graphics paper on python scripts. \n After playing around with the tool for a while, I realized that the visual scripting nodes let me draw pretty much anything on them. So that started my journey of creating a custom node library within the team and the first concept from it. \n CAN IT RUN DOOM! ",
+    tags: ["Python", "Rhino", "C#"],
+    links: [], 
+    featured: false,
+    category: 'Software',
+    detailedContent: [
+      {
+        type: 'video',
+        content: "/videos/doom.mp4",
+      }
+    ],
+    slug: "doom-rhino",
+    imageUrl: "/images/doom.png"
+  },
+  {
+    id: 13,
+    title: "Gearshift",
+    description: "I was the main contributor of the software side of the Gearshift project, programming the bluetooth module, the garmin application to communicate and the overall software support for an ongoing project.",
+    tags: ["Hardware", "Wearable"],
+    links: [
+      { url: "https://www.instagram.com/p/Ddzvb5YsDCM/", text: "Instagram Post" },
+      { url: "https://www.instagram.com/reel/DduEvQqhY87", text: "Instagram Post 2" },
+      { url: "https://www.instagram.com/p/DdtoBeUgCps/?img_index=3", text: "Featured on official adidas page" }
+    ],
+    featured: true,
+    category: 'Software',
+    detailedContent: [
+      {
+        type: 'video',
+        // Downloaded from the reel and compressed with `npm run videos`.
+        content: "/videos/gearshift3.mp4",
+        aspectRatio: '9/16',
+      },
+      {
+        type: 'video',
+        content: "/videos/gearshift2.mp4",
+        aspectRatio: '9/16',
+      }
+    ],
+    slug: "gearshift",
+    imageUrl: "/images/gearshift.png"
   }
 ];
 

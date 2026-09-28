@@ -1,2 +1,0 @@
-# Deployment ready
-# Updated deployment info

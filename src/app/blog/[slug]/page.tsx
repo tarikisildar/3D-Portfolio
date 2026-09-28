@@ -1,90 +1,122 @@
 import Link from 'next/link'
-import { getBlogPostBySlug, getAllBlogPosts } from '@/utils/mdUtils'
-import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
+import { notFound } from 'next/navigation'
+import { PostMarkdown } from '@/components/ui/PostMarkdown'
+import { getBlogPostBySlug, getAllBlogPosts, formatPostDate, formatEntryDate } from '@/utils/mdUtils'
 
-// Generate dynamic params for blog posts
+// Posts are fetched from Drive (or the repo) and cached for five minutes, so
+// an edit shows up on the live site within minutes, without a deploy.
+export const revalidate = 300
+
 export async function generateStaticParams() {
-  const posts = await getAllBlogPosts()
-  return posts.map((post) => ({
-    slug: post.slug,
-  }))
+  // Pre-render what exists at build time; if the source is unreachable, build
+  // anyway and render each post on its first visit instead.
+  try {
+    return (await getAllBlogPosts()).map((post) => ({ slug: post.slug }))
+  } catch (error) {
+    console.error('Could not list blog posts at build time:', error)
+    return []
+  }
 }
 
-// Set dynamic rendering to ensure we always get the latest content
-export const dynamic = 'force-dynamic'
+// No `dynamicParams = false` here: the dev server caches the list above, so a
+// post added while it runs would 404. Unknown slugs 404 via notFound() below.
 
-// Define props type with Promise for params
+// In the Next 15 App Router, params is always a Promise.
 type Props = {
-  params: Promise<{ slug: string }> | { slug: string }
+  params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: Props) {
+  const post = await getBlogPostBySlug((await params).slug)
+  return post ? { title: `${post.title} · Tarik Isildar`, description: post.excerpt } : {}
 }
 
 export default async function BlogPost({ params }: Props) {
-  // Await the params object to resolve it if it's a Promise
-  const resolvedParams = params instanceof Promise ? await params : params;
-
-  // Now use the resolved params
-  const { slug } = resolvedParams;
-
-  // Get blog post content
+  const { slug } = await params
   const post = await getBlogPostBySlug(slug)
+  if (!post) notFound()
 
-  // Hardcoded metadata for now - you can enhance this by adding frontmatter to your markdown
-  const category = "Travel & Food"
-  const date = "June 10, 2024"
-
-  // Extract title from content (first heading)
-  const title = post.content.split('\n')[0].replace(/^# /, '')
+  const date = formatPostDate(post.date)
+  const isLog = post.entries.length > 0
+  const meta = isLog
+    ? [
+        `${post.entryCount} ${post.entryCount === 1 ? 'day' : 'days'}`,
+        post.updated && `updated ${formatPostDate(post.updated)}`,
+        post.category,
+      ]
+    : [date, post.category, post.readTime]
 
   return (
-    <main className="py-20 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Blog Post Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 mb-4">
-            <Link href="/blog" className="text-primary hover:text-primary-dark transition-colors inline-flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Blog
-            </Link>
-            <span className="text-foreground/30">•</span>
-            <span className="text-sm text-foreground/60">{date}</span>
-            <span className="text-foreground/30">•</span>
-            <span className="bg-primary/10 text-primary text-xs font-medium px-3 py-1 rounded-full">
-              {category}
-            </span>
-          </div>
-          <h1 className="text-4xl font-bold mb-4">{title}</h1>
-        </div>
-
-        {/* Blog Post Content */}
-        <article className="prose dark:prose-invert prose-lg max-w-none">
-          <ReactMarkdown
-            rehypePlugins={[rehypeRaw]}
-            remarkPlugins={[remarkGfm]}
-            components={{
-              // Customize the rendering of elements if needed
-              h2: (props) => <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />,
-              h3: (props) => <h3 className="text-xl font-bold mt-6 mb-3" {...props} />,
-              ul: (props) => <ul className="list-disc pl-6 my-4" {...props} />,
-              ol: (props) => <ol className="list-decimal pl-6 my-4" {...props} />,
-              li: (props) => <li className="mb-2" {...props} />,
-              p: (props) => <p className="mb-4" {...props} />,
-              a: (props) => <a className="text-primary hover:text-primary-dark underline" {...props} />,
-              strong: (props) => <strong className="font-bold" {...props} />,
-              em: (props) => <em className="italic" {...props} />,
-              blockquote: (props) => <blockquote className="border-l-4 border-primary/30 pl-4 italic" {...props} />,
-              code: (props) => <code className="bg-foreground/10 px-1 py-0.5 rounded" {...props} />,
-              pre: (props) => <pre className="bg-foreground/10 p-4 rounded overflow-auto" {...props} />,
-            }}
+    <article>
+      <header className="border-b border-[var(--rule-soft)]">
+        <div className="mx-auto max-w-3xl px-6 pb-10 pt-10">
+          <Link
+            href="/blog"
+            className="text-[0.875rem] text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)]"
           >
-            {/* Skip the title which is already rendered */}
-            {post.content.split('\n').slice(1).join('\n')}
-          </ReactMarkdown>
-        </article>
-      </div>
-    </main>
+            <span aria-hidden>&larr; </span>Blog
+          </Link>
+          {post.draft && (
+            <p className="mt-6 block w-fit border border-[var(--live)] px-2 py-0.5 text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]">
+              Draft: not on the live site
+            </p>
+          )}
+          <h1 className="u-display mt-6 text-[clamp(2rem,5vw,3.25rem)]">{post.title}</h1>
+          <p className="u-figures mt-4 text-[0.875rem] text-[var(--ink-soft)]">
+            {meta.filter(Boolean).join(' · ')}
+          </p>
+        </div>
+      </header>
+
+      {post.body && (
+        <div className="mx-auto max-w-3xl px-6 pt-12 sm:pt-16">
+          <PostMarkdown slug={slug}>{post.body}</PostMarkdown>
+        </div>
+      )}
+
+      {/* A travel log: one section per day, oldest first, the date and place
+          in the margin like a logbook. Each day has an anchor
+          (#2026-10-02) so a single day can be linked. */}
+      {isLog && (
+        <ol className="mx-auto max-w-3xl px-6 pt-8">
+          {post.entries.map((entry) => (
+            <li
+              key={entry.id}
+              id={entry.id}
+              className="scroll-mt-[calc(var(--bar-h)+1rem)] border-t border-[var(--rule-soft)] py-10 first:border-t-[var(--ink)]"
+            >
+              <header className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <a
+                  href={`#${entry.id}`}
+                  className="u-figures text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]"
+                >
+                  Day {entry.day}
+                </a>
+                <p className="u-figures text-[0.875rem] text-[var(--ink-soft)]">
+                  {formatEntryDate(entry.date)}
+                  {entry.place && <> &middot; {entry.place}</>}
+                </p>
+                {entry.draft && (
+                  <span className="text-[0.75rem] uppercase tracking-[0.08em] text-[var(--live)]">Draft</span>
+                )}
+              </header>
+              {entry.title && (
+                <h2
+                  className="mt-2 text-[clamp(1.375rem,2.6vw,1.75rem)] leading-tight"
+                  style={{ fontVariationSettings: '"wdth" 110, "wght" 620' }}
+                >
+                  {entry.title}
+                </h2>
+              )}
+              <div className="mt-4">
+                <PostMarkdown slug={slug}>{entry.body}</PostMarkdown>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div className="pb-16" />
+    </article>
   )
 }

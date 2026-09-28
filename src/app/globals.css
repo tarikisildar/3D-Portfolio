@@ -1,40 +1,578 @@
 @import "tailwindcss";
 
+/* Tailwind v4 loads plugins from CSS. The `plugins: [typography]` entry in the
+   old tailwind.config.js was silently ignored, so every `prose` class in the
+   blog and in ProjectCard rendered unstyled. */
+@plugin "@tailwindcss/typography";
+
+/* Neutralise the `dark:` variant.
+ *
+ * The palette is taken from the rooms and does not invert, but Tailwind's
+ * default dark variant still follows prefers-color-scheme — so every
+ * `dark:bg-gray-800` left over from the old theme was firing for anyone whose
+ * OS is set to dark, putting near-black cards on a plaster page. Binding the
+ * variant to a class that is never applied switches them all off at once,
+ * without having to find and strip several hundred of them by hand. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Palette sampled from the rooms themselves.
+   
+   The site is about three low-poly interiors, and those interiors are warm
+   plaster, wood and a grey-green that turns up on nearly every wall. Taking the
+   chrome's colours from the rooms is what lets the page background run straight
+   into the 3D viewport with no seam — the old design put a near-black page
+   under a warm-cream scene and the join read as a mistake.
+   
+   One hot colour, `live`, and it means exactly one thing: you are here.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --secondary: #6d28d9;
-  --accent: #f59e0b;
+  --plaster: #ede4d6;
+  --plaster-deep: #e3d8c6;
+  --plaster-lift: #f5efe4;
+  --rule: #a8a890;
+  --rule-soft: #c6c3b0;
+  --ink: #2e3338;
+  --ink-soft: #6b7076;
+  --live: #e4462a;
+
+  --background: var(--plaster);
+  --foreground: var(--ink);
+
+  /* Chrome that floats over the 3D viewport. Tinted from the plaster rather
+     than neutral grey, so it belongs to the room behind it. */
+  --veil: rgba(237, 228, 214, 0.82);
+  --veil-strong: rgba(237, 228, 214, 0.95);
+
+  --rail-h: 3.5rem;
+  --bar-h: 3.25rem;
+
+  /* Height of the 3D stage.
+  
+     Short of a full screen on purpose: the intro needs to be readable on
+     arrival, not one scroll away. A room you can see plus a sentence telling
+     you whose room it is beats a room alone. Phones get less still, because
+     the rooms are wide and low and a tall frame is mostly empty background
+     above the half-height walls. */
+  --stage-h: 52svh;
+
+  /* `primary` is kept as an alias so the ~57 existing bg-primary/text-primary
+     usages keep resolving while pages are migrated. It points at ink, not at
+     the accent: solid dark buttons read as architectural against plaster, and
+     `live` has one job — marking where you are. */
+  --primary: var(--ink);
+  --primary-dark: #1d2226;
+  --secondary: var(--ink-soft);
+  --accent: var(--live);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-plaster: var(--plaster);
+  --color-plaster-deep: var(--plaster-deep);
+  --color-plaster-lift: var(--plaster-lift);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-live: var(--live);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-archivo);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Display type: the family's width axis is the design, not a second typeface. */
+.u-display {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-variation-settings: "wdth" 118, "wght" 620;
+  letter-spacing: -0.025em;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.u-lede {
+  font-variation-settings: "wdth" 104, "wght" 420;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+/* Tabular figures so year ranges line up wherever they appear. */
+.u-figures {
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: "wdth" 96, "wght" 500;
+}
+
+/* ---------------------------------------------------------------------------
+   Hotspots: the clickable objects in the room.
+
+   Tag always visible, the way a game labels what you can interact with. A
+   bare dot does not say "click me", and the whole point of these is that
+   people could not tell what to do. The ring marks the exact object; the tag
+   sits above it on a short stem so it never covers the thing it names.
+   Hit area is 44px tall however small the visuals are.
+--------------------------------------------------------------------------- */
+.hotspot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Anchor the ring, not the tag, on the object. drei centres the whole
+     element on the point, so lift it by half its height less half the ring. */
+  transform: translateY(calc(-50% + 5.5px));
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: hotspot-in 320ms ease-out both;
+}
+
+/* Markers are unmounted while the camera moves, so each arrival fades them
+   back in rather than popping them. */
+@keyframes hotspot-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.hotspot__label {
+  display: block;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--rule-soft);
+  /* Solid, and no backdrop-filter: WebKit does not repaint a backdrop-
+     filtered element when its :hover styles change, so in Safari the hover
+     state only showed up once a click forced a repaint. */
+  background: var(--plaster-lift);
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1;
+  font-variation-settings: "wdth" 100, "wght" 560;
+  box-shadow: 0 1px 3px rgba(46, 51, 56, 0.18);
+}
+
+.hotspot__stem {
+  width: 1px;
+  height: 12px;
+  background: var(--ink);
+  opacity: 0.55;
+}
+
+.hotspot__ring {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: var(--plaster-lift);
+  transition: transform 150ms ease, background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+/* A slow ripple off the ring: the "you can use this" cue from games, kept to
+   one faint ring every few seconds so a room full of them is not a light
+   show. */
+.hotspot__ring::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  opacity: 0;
+  animation: hotspot-ripple 2.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hotspot-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  45%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Invisible padding so the target is thumb-sized. */
+.hotspot::after {
+  content: "";
+  position: absolute;
+  inset: -8px -6px;
+}
+
+.hotspot__label,
+.hotspot__stem {
+  transition: transform 150ms ease, background-color 150ms ease,
+    color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* Hover answers "is this clickable?" before the click: the tag lifts off the
+   object, goes solid, and the ring lights up in the one hot colour. */
+.hotspot:hover .hotspot__label,
+.hotspot:focus-visible .hotspot__label {
+  transform: translateY(-3px);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--plaster);
+  box-shadow: 0 4px 12px rgba(46, 51, 56, 0.28);
+}
+
+.hotspot:hover .hotspot__stem,
+.hotspot:focus-visible .hotspot__stem {
+  /* Stretch to meet the lifted tag: 12px + 3px. */
+  transform: scaleY(1.25);
+  transform-origin: bottom;
+  opacity: 1;
+}
+
+.hotspot:hover .hotspot__ring,
+.hotspot:focus-visible .hotspot__ring {
+  transform: scale(1.35);
+  background: var(--live);
+  border-color: var(--live);
+}
+
+.hotspot:hover .hotspot__ring::after,
+.hotspot:focus-visible .hotspot__ring::after {
+  border-color: var(--live);
+  animation-duration: 1.2s;
+}
+
+.hotspot:active .hotspot__ring {
+  transform: scale(1.1);
+}
+
+.hotspot:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotspot__ring,
+  .hotspot__label,
+  .hotspot__stem {
+    transition: none;
+  }
+  .hotspot,
+  .hotspot__ring::after {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Drawing sheet: the chrome around the 3D stage, after an architect's set.
+   See DrawingSheet.tsx. Everything here is ink on the room at low contrast;
+   it frames the room and should never compete with it.
+--------------------------------------------------------------------------- */
+.sheet {
+  --sheet-inset: 12px;
+  /* The stage runs up behind the top bar, so the top edge of the sheet is
+     where the bar ends. */
+  --sheet-top: calc(var(--bar-h) + var(--sheet-inset));
+  color: var(--ink);
+}
+
+.sheet__crop {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--ink);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.45;
+}
+.sheet__crop--tl { top: var(--sheet-top); left: var(--sheet-inset); border-top-width: 1px; border-left-width: 1px; }
+.sheet__crop--tr { top: var(--sheet-top); right: var(--sheet-inset); border-top-width: 1px; border-right-width: 1px; }
+.sheet__crop--bl { bottom: var(--sheet-inset); left: var(--sheet-inset); border-bottom-width: 1px; border-left-width: 1px; }
+.sheet__crop--br { bottom: var(--sheet-inset); right: var(--sheet-inset); border-bottom-width: 1px; border-right-width: 1px; }
+
+.sheet__north {
+  position: absolute;
+  top: calc(var(--sheet-top) + 10px);
+  right: calc(var(--sheet-inset) + 10px);
+  opacity: 0.75;
+}
+.sheet__north text {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-variation-settings: "wdth" 110, "wght" 650;
+}
+.sheet__needle {
+  transform-origin: 20px 20px;
+  transform: rotate(var(--sheet-heading, 0deg));
+}
+
+/* Title block: a strip of ruled cells, label over value, the way every
+   drawing in a set is signed off. */
+.sheet__block {
+  position: absolute;
+  left: calc(var(--sheet-inset) + 10px);
+  bottom: calc(var(--sheet-inset) + 10px);
+  display: flex;
+  margin: 0;
+  border: 1px solid var(--ink);
+  background: var(--veil-strong);
+}
+
+.sheet__cell {
+  padding: 6px 12px 7px;
+  border-left: 1px solid var(--rule);
+}
+.sheet__cell:first-child {
+  border-left: 0;
+}
+.sheet__cell dt {
+  font-size: 0.5625rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-variation-settings: "wdth" 110, "wght" 500;
+}
+.sheet__cell dd {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1;
+  white-space: nowrap;
+  font-variation-settings: "wdth" 104, "wght" 560;
+}
+.sheet__cell--sheet dd {
+  font-variation-settings: "wdth" 96, "wght" 650;
+}
+.sheet__of {
+  color: var(--ink-soft);
+  font-variation-settings: "wdth" 96, "wght" 450;
+}
+.sheet__cell .sheet__place {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-variation-settings: "wdth" 125, "wght" 640;
+}
+
+/* Phones: the Procrastinate controls take the whole bottom edge, so the
+   block moves to the top corner and keeps only the sheet number and place. */
+@media (max-width: 639px) {
+  .sheet__block {
+    bottom: auto;
+    top: calc(var(--sheet-top) + 10px);
+  }
+  .sheet__cell--wide {
+    display: none;
+  }
+  .sheet__north svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   CV city headings: the same title-block language as the stage, so a city on
+   the CV reads as the sheet you would travel to. The whole block is the
+   button; hover inverts it the way the room markers do.
+--------------------------------------------------------------------------- */
+.cv-city {
+  display: block;
+  border: 1px solid var(--ink);
+  background: var(--plaster-lift);
+  color: var(--ink);
+  padding: 12px 16px 14px;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.cv-city > span {
+  display: block;
+}
+.cv-city__sheet {
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-variation-settings: "wdth" 110, "wght" 500;
+}
+.cv-city__name {
+  margin-top: 8px;
+  /* Sized so the longest city (NUREMBERG) fits the 17rem column. */
+  font-size: clamp(1.5rem, 2.4vw, 1.75rem);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-variation-settings: "wdth" 118, "wght" 650;
+}
+.cv-city__years {
+  margin-top: 6px;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.cv-city .cv-city__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 0.8125rem;
+  font-variation-settings: "wdth" 102, "wght" 560;
+}
+.cv-city__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--live);
+}
+.cv-city__arrow {
+  transition: transform 150ms ease;
+}
+
+.cv-city:not([aria-current]):not(:disabled):hover,
+.cv-city:not([aria-current]):focus-visible {
+  background: var(--ink);
+  color: var(--plaster);
+  outline: none;
+}
+.cv-city:not([aria-current]):not(:disabled):hover .cv-city__sheet,
+.cv-city:not([aria-current]):not(:disabled):hover .cv-city__years,
+.cv-city:not([aria-current]):focus-visible .cv-city__sheet,
+.cv-city:not([aria-current]):focus-visible .cv-city__years {
+  color: var(--rule-soft);
+}
+.cv-city:not([aria-current]):not(:disabled):hover .cv-city__action,
+.cv-city:not([aria-current]):focus-visible .cv-city__action {
+  border-top-color: rgba(237, 228, 214, 0.25);
+}
+.cv-city:hover .cv-city__arrow,
+.cv-city:focus-visible .cv-city__arrow {
+  transform: translateX(3px);
+}
+.cv-city[aria-current] {
+  cursor: default;
+}
+.cv-city:focus-visible {
+  outline: 2px solid var(--live);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-city,
+  .cv-city__arrow {
+    transition: none;
+  }
+}
+
+/* Long-form text (blog posts): the typography plugin's layout, in the
+   room's colours. Setting its variables once replaces a className override
+   on every Markdown element. */
+.u-prose {
+  --tw-prose-body: var(--ink);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-lead: var(--ink-soft);
+  --tw-prose-links: var(--ink);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-counters: var(--ink-soft);
+  --tw-prose-bullets: var(--rule);
+  --tw-prose-hr: var(--rule-soft);
+  --tw-prose-quotes: var(--ink-soft);
+  --tw-prose-quote-borders: var(--live);
+  --tw-prose-captions: var(--ink-soft);
+  --tw-prose-code: var(--ink);
+  --tw-prose-pre-code: var(--plaster);
+  --tw-prose-pre-bg: var(--ink);
+  --tw-prose-th-borders: var(--rule);
+  --tw-prose-td-borders: var(--rule-soft);
+}
+.u-prose :where(h2, h3, h4) {
+  font-variation-settings: "wdth" 110, "wght" 620;
+  letter-spacing: -0.01em;
+}
+.u-prose :where(a) {
+  text-decoration-color: var(--live);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition: color 150ms ease;
+}
+.u-prose :where(a):hover {
+  color: var(--live);
+}
+
+/* Pictures in posts: full column width, caption (the alt text) underneath. */
+.u-prose figure {
+  margin: 2em 0;
+}
+.u-prose figure img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  /* A portrait phone photo at full column width would be several screens
+     tall; cap it and let it be narrower instead. */
+  max-height: 75vh;
+  height: auto;
+  margin: 0 auto;
+  background: var(--plaster-deep);
+}
+.u-prose figcaption {
+  margin-top: 0.5em;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+/* Several pictures in a row of Markdown: a contact sheet. Square crops keep
+   a mix of portrait and landscape phone photos in an even grid. */
+.u-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 2em 0;
+}
+@media (min-width: 640px) {
+  .u-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.u-gallery figure {
+  margin: 0;
+}
+.u-gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--plaster-deep);
+}
+.u-gallery figcaption {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+/* A hairline that reads as a drawing rule rather than a divider. */
+.u-rule {
+  border-color: var(--rule-soft);
+}
+
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #60a5fa;
-    --primary-dark: #3b82f6;
-    --secondary: #a78bfa;
-    --accent: #fbbf24;
+    --stage-h: 66svh;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-variation-settings: "wdth" 100;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* The old design inverted on prefers-color-scheme, which fought the warm rooms
+   and produced the near-black page this redesign removes. The palette is the
+   rooms' own, so it does not invert. */
 
 html,
 body {
@@ -46,26 +584,7 @@ canvas {
   display: block;
 }
 
-/* For the interactive experience */
-.experience-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-}
 
-/* For content sections */
-.content-section {
-  position: relative;
-  z-index: 1;
-  background: rgba(var(--background-rgb), 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
-  padding: 2rem;
-  margin: 2rem 0;
-}
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -83,404 +602,6 @@ canvas {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-dark);
-}
-
-/* Animation for expanded project cards */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out forwards;
-}
-
-.animate-fadeOut {
-  animation: fadeOut 0.3s ease-in-out forwards;
-}
-
-/* Project card animations */
-.project-card-expanded {
-  transition: all 0.3s ease-in-out;
-}
-
-.project-card-closing {
-  transition: all 0.3s ease-in-out;
-}
-
-.expanded-content {
-  transition: all 0.3s ease-in-out;
-}
-
-.expanded-image-content {
-  transition: all 0.3s ease-in-out;
-  animation: slideInRight 0.3s ease-in-out;
-}
-
-/* Animation for card image fade out when expanding */
-.card-image-fadeout {
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-/* Expanded card transitions */
-.expanded-card {
-  transition: all 0.4s ease-in-out;
-}
-
-/* Animation for floating image that jumps out to the side */
-.floating-image-enter {
-  animation: floatIn 0.5s ease-in-out forwards;
-}
-
-.floating-image-exit {
-  animation: floatOut 0.5s ease-in-out forwards;
-}
-
-@keyframes floatIn {
-  0% {
-    opacity: 0;
-    transform: translateX(-30%);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes floatOut {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-30%);
-  }
-}
-
-/* Slide animations for expanded content */
-.animate-slideOutRight {
-  animation: slideOutRight 0.3s ease-in-out forwards;
-}
-.animate-slideInLeft {
-  animation: slideOutRight 0.3s ease-in-out backwards;
-}
-
-/* Expanded image animation */
-.expanded-image-container {
-  animation: popOutFromCard 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-  transform-origin: left center;
-}
-
-.expanded-image-container.closing {
-  animation: popBackIntoCard 0.4s cubic-bezier(0.18, 0.25, 0.32, 1.28) forwards;
-}
-
-@keyframes popOutFromCard {
-  0% {
-    opacity: 0.5;
-    transform: translateX(-50px) scale(0.6);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  }
-  30% {
-    opacity: 0.8;
-    transform: translateX(10px) scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  }
-}
-
-@keyframes popBackIntoCard {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  }
-  100% {
-    opacity: 0.5;
-    transform: translateX(-350px) translateY(-100px) scale(0.6);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-
-/* Animation for expanded image in details section */
-.expanded-image {
-  position: relative;
-  animation: popIn 0.4s ease-in-out;
-  transform-origin: center;
-}
-
-@keyframes popIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.8) translateY(10px);
-  }
-  50% {
-    transform: scale(1.05) translateY(-5px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideOutRight {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-}
-
-/* Project card image pop-out animation - NEW */
-.pop-out-image {
-  animation: cardImagePopOut 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-  transform-origin: left center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.pop-out-image.closing {
-  animation: cardImagePopIn 0.4s cubic-bezier(0.47, 0, 0.75, 0.72) forwards;
-}
-
-@keyframes cardImagePopOut {
-  0% {
-    opacity: 0.5;
-    transform: translateX(-50px) scale(0.6);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  }
-  30% {
-    opacity: 0.8;
-    transform: translateX(10px) scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  }
-}
-
-@keyframes cardImagePopIn {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-50px) scale(0.6);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-
-/* Direct card-to-expanded image animation - FIXED LEFT ORIGIN */
-@keyframes growFromOrigin {
-  0% {
-    opacity: 0.5;
-    transform: translateX(-100%) scale(0.5);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  }
-  30% {
-    opacity: 0.8;
-    transform: translateX(-30%) scale(0.8);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  }
-}
-
-.shrink-animation {
-  animation: shrinkBackToCard 0.3s ease-in forwards !important;
-}
-
-@keyframes shrinkBackToCard {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-100%) scale(0.5);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-
-/* Fade animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
-/* Mobile responsive design for content containers */
-@media (max-width: 767px) {
-  /* All content gets full width on mobile */
-  .use-mobile-width {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-}
-
-/* Desktop scales - explicit percentages */
-@media (min-width: 768px) {
-  .desktop-scale-100 {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-95 {
-    width: 95%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-90 {
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-85 {
-    width: 85%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-80 {
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-75 {
-    width: 75%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-70 {
-    width: 70%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-65 {
-    width: 65%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-60 {
-    width: 60%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-55 {
-    width: 55%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-50 {
-    width: 50%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-45 {
-    width: 45%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-40 {
-    width: 40%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-35 {
-    width: 35%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-30 {
-    width: 30%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-25 {
-    width: 25%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .desktop-scale-20 {
-    width: 20%;
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 
 /* Any additional styles should go here */

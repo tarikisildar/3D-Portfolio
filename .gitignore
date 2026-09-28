@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# render output from `npm run models:check`
+/.visual-check/
+
+# Blender autosaves and backup copies
+*.blend1
+*.blend2
+models-src/**/backups/
+
+# Generated apartment reference material (kept locally, not source)
+/output/
+
+# lighting-lab render output
+/.lighting-lab/
+
+# original videos; `npm run videos` writes the compressed copies to public/videos
+/media-src/
