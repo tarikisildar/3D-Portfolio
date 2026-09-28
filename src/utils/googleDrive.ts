@@ -99,8 +99,49 @@ async function get(url: string) {
   return res;
 }
 
-/** Everything directly inside a folder, not in the bin. */
-export async function listFolder(folderId: string): Promise<DriveFile[]> {
+/*
+ * In-process caches, so a page doesn't make the same Drive round trips on
+ * every render. That matters most in `next dev`, which re-renders every
+ * request (about 2 s per blog page without these); in production pages are
+ * already served from the ISR cache and these only speed up revalidation.
+ *
+ *  - Folder listings: kept LISTING_TTL_MS. They are how an edit is noticed:
+ *    each file's modifiedTime comes from the listing.
+ *  - File contents: keyed by id + modifiedTime, so an edited Doc is always
+ *    refetched and an unchanged one never is. No expiry needed.
+ */
+const LISTING_TTL_MS = 15_000;
+const MAX_CACHED_FILES = 60;
+
+const listings = new Map<string, { at: number; files: Promise<DriveFile[]> }>();
+const contents = new Map<string, Promise<string | Buffer>>();
+
+/** Remember a file's contents, dropping the oldest once the cache is full. */
+function remember<T extends string | Buffer>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = contents.get(key);
+  if (hit) return hit as Promise<T>;
+  const pending = load().catch((error) => {
+    contents.delete(key); // don't cache a failure
+    throw error;
+  });
+  contents.set(key, pending);
+  if (contents.size > MAX_CACHED_FILES) contents.delete(contents.keys().next().value!);
+  return pending;
+}
+
+/** Everything directly inside a folder, not in the bin (cached briefly; see above). */
+export function listFolder(folderId: string): Promise<DriveFile[]> {
+  const hit = listings.get(folderId);
+  if (hit && Date.now() - hit.at < LISTING_TTL_MS) return hit.files;
+  const files = fetchFolder(folderId).catch((error) => {
+    listings.delete(folderId);
+    throw error;
+  });
+  listings.set(folderId, { at: Date.now(), files });
+  return files;
+}
+
+async function fetchFolder(folderId: string): Promise<DriveFile[]> {
   const files: DriveFile[] = [];
   let pageToken = '';
   do {
@@ -123,16 +164,18 @@ export async function listFolder(folderId: string): Promise<DriveFile[]> {
 }
 
 /** A Google Doc as Markdown, or a plain text/Markdown file's contents. */
-export async function readText(file: DriveFile): Promise<string> {
+export function readText(file: DriveFile): Promise<string> {
   const url =
     file.mimeType === DOC_MIME
       ? `${API}/files/${file.id}/export?mimeType=text%2Fmarkdown`
       : `${API}/files/${file.id}?alt=media&supportsAllDrives=true`;
-  return (await get(url)).text();
+  return remember(`text:${file.id}:${file.modifiedTime}`, async () => (await get(url)).text());
 }
 
 /** A file's bytes. */
-export async function readBytes(file: DriveFile): Promise<Buffer> {
-  const res = await get(`${API}/files/${file.id}?alt=media&supportsAllDrives=true`);
-  return Buffer.from(await res.arrayBuffer());
+export function readBytes(file: DriveFile): Promise<Buffer> {
+  return remember(`bytes:${file.id}:${file.modifiedTime}`, async () => {
+    const res = await get(`${API}/files/${file.id}?alt=media&supportsAllDrives=true`);
+    return Buffer.from(await res.arrayBuffer());
+  });
 }
