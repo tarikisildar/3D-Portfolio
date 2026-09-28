@@ -17,7 +17,7 @@ export default function Home() {
   const { chapter } = useChapter();
   const home = chapter.content.home;
 
-  const featuredProjects = projects.filter((project) => project.featured);
+  const featuredProjects = projects.filter((project) => project.featured).sort((a, b) => b.id - a.id);
 
   const openProject = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);

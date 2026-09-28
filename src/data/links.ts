@@ -27,8 +27,6 @@ export const github: ContactLink = {
   detail: 'tarikisildar',
 }
 
-// TODO: two LinkedIn URLs were in use. About had /in/tariksldr, the footer
-// and CV had /in/tarikisildar. Keep the one that is actually yours.
 export const linkedin: ContactLink = {
   label: 'LinkedIn',
   href: 'https://linkedin.com/in/tariksldr',

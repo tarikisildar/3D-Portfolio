@@ -99,7 +99,7 @@ const projects: Project[] = [
     links: [
 
     ],
-    featured: true,
+    featured: false,
     category: 'Software',
     detailedContent: [
       {
@@ -125,7 +125,7 @@ const projects: Project[] = [
     id: 9,
     title: "Police Simulator: Patrol Officers",
     slug: "police-simulator",
-    description: "An immersive law enforcement simulation game where players patrol accurately recreated city districts, enforce traffic laws, and investigate crime scenes. Recognized as one of the Top 5 Early Access Games of 2022 by Steam.",
+    description: "A Police officer simulation game where players patrol accurately recreated city districts, enforce traffic laws, and investigate crime scenes. Recognized as one of the Top 5 Early Access Games of 2022 by Steam.",
     imageUrl: "/images/police.jpg",
     tags: ["Unreal Engine 4", "C++"],
     links: [
@@ -437,7 +437,7 @@ const projects: Project[] = [
     detailedContent: [
       {
         type: 'video',
-        content: "https://drive.google.com/file/d/1ac-_rzdjjr98VJQzTBwLjEHV2C3ARabN/view?usp=sharing",
+        content: "/videos/doom.mp4",
       }
     ],
     slug: "doom-rhino",
@@ -446,12 +446,28 @@ const projects: Project[] = [
   {
     id: 13,
     title: "Gearshift",
-    description: "Only the coolest pair of shoes ever! I worked on the programming of the bluetooth module, the garmin application to communicate and the overall software support for making the project possible.",
-    tags: ["Hardware", "C", "Wearable"],
-    links: [],
-    featured: false,
+    description: "I was the main contributor of the software side of the Gearshift project, programming the bluetooth module, the garmin application to communicate and the overall software support for an ongoing project.",
+    tags: ["Hardware", "Wearable"],
+    links: [
+      { url: "https://www.instagram.com/p/Ddzvb5YsDCM/", text: "Instagram Post" },
+      { url: "https://www.instagram.com/reel/DduEvQqhY87", text: "Instagram Post 2" },
+      { url: "https://www.instagram.com/p/DdtoBeUgCps/?img_index=3", text: "Featured on official adidas page" }
+    ],
+    featured: true,
     category: 'Software',
-    detailedContent: [],
+    detailedContent: [
+      {
+        type: 'video',
+        // Downloaded from the reel and compressed with `npm run videos`.
+        content: "/videos/gearshift3.mp4",
+        aspectRatio: '9/16',
+      },
+      {
+        type: 'video',
+        content: "/videos/gearshift2.mp4",
+        aspectRatio: '9/16',
+      }
+    ],
     slug: "gearshift",
     imageUrl: "/images/gearshift.png"
   }

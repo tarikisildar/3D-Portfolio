@@ -10,9 +10,9 @@ const nurembergAbout: AboutData = {
   title: "Software Engineer - Graphics",
   bio: [
     "I'm a Software Engineer with an M.Sc. from the Technical University of Munich, where I've focused on real-time rendering, autonomous systems, and AI-powered solutions.",
-    "I truly enjoy building software, I'm missing the old days of spending hours trying to figure out how to make the piece of code more clean and robust and nitpick on small typos. And in contrast I nowadays find myself vibing more often than not, and I am mostly working on 5 things on parallel.",
+    "I truly enjoy building software, and so far at any point in time I had 5 projects that I was actively working on. AI made this way easier to manage but I do miss hand-crafting solutions myself.",
     "From the first years of my career, I got good at creating PoCs and communicate it's potential impacts to the other stakeholders. I believe an image tells a story better than a thousand words, and that's why I believed no one would read my webpage but the interaction I built can make people remember some things from it. ",
-    "When I'm not nerding on a computer program, you'll find me in a specialty coffee place, signing up my next marathon, or searching for people to go karaoke with ;)"
+    "When I'm not nerding on a computer program, you'll find me in a specialty coffee place, signing up for my next marathon, or searching for people to go karaoke with ;)"
   ],
   skills: [
   ],

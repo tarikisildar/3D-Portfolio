@@ -33,7 +33,7 @@ export default function CV() {
     .map((place) => ({ place, chapter: all.find((c) => c.id === place.chapter) }))
     .filter((p): p is { place: (typeof cv.places)[number]; chapter: Chapter } =>
       Boolean(p.chapter)
-    )
+    ).sort((a, b) => b.place.year - a.place.year)
 
   // Internal links carry the era, like the rest of the navigation, so a reload
   // lands in the same place.
@@ -174,7 +174,9 @@ export default function CV() {
  * within a country, a flight across a border.
  */
 function Journey({ from, to }: { from: Chapter; to: Chapter }) {
-  const mode = from.country === to.country ? 'Train' : 'Flight'
+  let mode = from.country === to.country ? 'Train' : 'Flight'
+  if (from.city === "Nuremberg" && to.city === "Munich") mode = "RE1"
+
   return (
     <div className="flex items-center gap-4 py-5 text-[0.8125rem] text-[var(--ink-soft)]">
       <span aria-hidden className="h-px flex-1 border-t border-dashed border-[var(--rule)]" />

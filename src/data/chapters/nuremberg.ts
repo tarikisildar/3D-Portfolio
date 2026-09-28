@@ -20,13 +20,12 @@ export const NUREMBERG: Chapter = {
   },
   sections: ['home', 'about', 'projects', 'cv', 'blog'],
 
-  // Reusing Munich's clips as placeholders — same files, referenced twice, not
-  // copied. Swap them for this era's own time-wasting when you have some.
   videos: [
-    '/videos/hoffman.mp4',
-    '/videos/office.mp4',
-    '/videos/shorts.mp4',
-    '/videos/radiohead.mp4',
+    '/videos/ai_bubble.mp4',
+    '/videos/dj.mp4',
+    '/videos/doom.mp4',
+    '/videos/inception.mp4',
+    '/videos/shorts_nrm.mp4',
   ],
   // No `screen` here on purpose: model a plane over the TV face named
   // `screen_tv` and the placement is read straight out of the GLB. Until then
@@ -37,11 +36,8 @@ export const NUREMBERG: Chapter = {
     home: {
       greeting: "Hey, it's Tarik",
       // TODO: your words. This is the one line that most obviously belongs to
-      // the new place — it currently still describes the Munich room.
       roomBlurb:
         'Welcome to my virtual apartment in Nuremberg. This is a replica of the place I lived during the Nuremberg leg of my adventure. Enjoy your stay!',
-      // TODO: the Munich-era paragraphs, carried over so the page is not empty.
-      // Rewriting these is the point of per-chapter content.
       aboutPreview: [
         "I'm a Software Engineer with an M.Sc. from the Technical University of Munich. I've worked on Games, Autonomous Driving, and even Shoes throughout my career.",
         "I like running, hiking, photography and nerding about coffee",
@@ -50,9 +46,6 @@ export const NUREMBERG: Chapter = {
       ],
       photo: '/images/tarik/me_nrm.jpg',
     },
-    // TODO: currently the Munich-era About, shared by reference. Replace with a
-    // Nuremberg-era copy — a new object, not a mutation of this one, or you will
-    // edit Munich's past as well.
     about: nurembergAbout,
   },
 

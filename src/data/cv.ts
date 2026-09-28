@@ -44,6 +44,7 @@ export type CvPlace = {
   chapter: string
   /** Optional line on what this move was about. */
   note?: string
+  year:number
   /** Newest last: the page reads top to bottom as the story went. */
   entries: CvEntry[]
 }
@@ -59,11 +60,12 @@ export type Cv = {
 
 export const cv: Cv = {
   intro:
-    'Computer graphics and robotics engineer with an M.Sc. from TUM, working on real-time rendering and autonomous systems. Games, self-driving cars, and lately shoes.',
+    'Computer graphics engineer with an M.Sc. from TUM, working on real-time rendering and autonomous systems. Games, self-driving cars, and lately shoes.',
 
   places: [
     {
       chapter: 'ankara',
+      year: 2017,
       entries: [
         {
           kind: 'study',
@@ -80,7 +82,7 @@ export const cv: Cv = {
           from: '2020-02',
           to: '2021-05',
           highlights: [
-            'Built interactive playable ads in WebGL with Three.js and JavaScript, saving over $10,000 per game.',
+            'Built interactive playable ads in WebGL with Three.js and JavaScript.',
             'Rapid-prototyped more than ten mobile games in Unity and C#.',
           ],
           links: [
@@ -93,6 +95,7 @@ export const cv: Cv = {
     },
     {
       chapter: 'munich',
+      year: 2021,
       entries: [
         {
           kind: 'study',
@@ -101,7 +104,24 @@ export const cv: Cv = {
           from: '2021-09',
           to: '2025-03',
           summary: 'Focus on computer graphics, machine learning, compilers and computer vision.',
-          links: [{ label: "Master's thesis", href: '/projects?project=thesis' }],
+          links: [
+            { label: "Master's thesis", href: '/projects?project=thesis' },
+            { label: "Visualization Engine", href: '/projects?project=idp-interface' },
+            { label: "Praktikum", href: '/projects?project=simulation-based-autonomous-driving' }
+          ],
+        },
+        {
+          kind: 'work',
+          org: 'NVIDIA',
+          role: 'Software Engineering Intern, Autonomous Vehicles',
+          from: '2024-04',
+          to: '2025-04',
+          highlights: [
+            'NVAssistant: an LLM work assistant pulling enterprise services into daily summaries. Pitched, designed and shipped in three months (Python, FastAPI, React, PostgreSQL).',
+            'NDAS Parking: autonomous parking components in C++, from requirements through unit and integration tests.',
+            'Bazel build scripts and a TypeScript visualisation tool for the wider team.',
+          ],
+          tags: ['C++', 'Python', 'Bazel', 'TypeScript'],
         },
         {
           kind: 'work',
@@ -117,31 +137,24 @@ export const cv: Cv = {
           links: [{ label: 'Police Simulator', href: '/projects?project=police-simulator' }],
           tags: ['Unreal Engine 4', 'C++'],
         },
-        {
-          kind: 'work',
-          org: 'NVIDIA',
-          role: 'Software Engineering Intern, Autonomous Vehicles',
-          from: '2024-04',
-          // TODO: end date. The old PDF said "ongoing".
-          to: '2025',
-          highlights: [
-            'NVAssistant: an LLM work assistant pulling enterprise services into daily summaries. Pitched, designed and shipped in three months (Python, FastAPI, React, PostgreSQL).',
-            'NDAS Parking: autonomous parking components in C++, from requirements through unit and integration tests.',
-            'Bazel build scripts and a TypeScript visualisation tool for the wider team.',
-          ],
-          tags: ['C++', 'Python', 'Bazel', 'TypeScript'],
-        },
       ],
     },
     {
       chapter: 'nuremberg',
+      year: 2025,
       entries: [
         {
           kind: 'work',
           org: 'adidas',
-          // TODO: role, dates and what you work on.
+          role: 'Software Engineer',
           from: '2025',
           to: null,
+          summary: "Part of the adidas R&D team bringing software solutions to athletes. Working on different sets of solutions everyday with different teams and technologies. I sometimes can't believe how much I enjoy doing the stuff I get paid for doing here.",
+          highlights: [
+            "Implemented Research papers into the production environment to help athletes break new records with the help of adidas technology.",
+            "Made a running shoe that can have a controllable stiffness with a smartwatch integration. Check Gearshift project for more details.",
+            "Contributed to lines like Techfit, football cleats and other performance-oriented products.",
+          ],
           links: [
             { label: 'Gearshift', href: '/projects?project=gearshift' },
             { label: 'Rhino, but can it run Doom?', href: '/projects?project=doom-rhino' },
@@ -164,7 +177,7 @@ export const cv: Cv = {
   // Same addresses as the footer.
   contact: [
     { label: 'Email', href: 'mailto:tarikisildar@gmail.com' },
-    { label: 'LinkedIn', href: 'https://linkedin.com/in/tarikisildar' },
+    { label: 'LinkedIn', href: 'https://linkedin.com/in/tariksldr' },
     { label: 'GitHub', href: 'https://github.com/tarikisildar' },
   ],
 }
