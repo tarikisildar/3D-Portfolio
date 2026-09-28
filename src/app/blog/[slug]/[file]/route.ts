@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import { readPostBytes } from '@/utils/blogSource'
-import { getPostMediaFile } from '@/utils/mdUtils'
+import { getBlogPostBySlug, getPostMediaFile } from '@/utils/mdUtils'
 
 /**
  * A photo from a post's folder, at /blog/<slug>/<file name>.
@@ -20,6 +20,8 @@ const RESIZABLE = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif'
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string; file: string }> }) {
   const { slug, file } = await params
+  // Only for posts the site shows: a draft's photos stay hidden with it.
+  if (!(await getBlogPostBySlug(slug))) return new Response('Not found', { status: 404 })
   const media = await getPostMediaFile(slug, decodeURIComponent(file))
   if (!media) return new Response('Not found', { status: 404 })
 
