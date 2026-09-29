@@ -174,6 +174,10 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
   // Clickable objects in the room, authored as `hotspot_*` empties.
   const [hotspots, setHotspots] = useState<Hotspot[]>([])
   const [cameraMoving, setCameraMoving] = useState(false)
+  // Which room the camera has taken its starting pose for; the room is only
+  // drawn once that matches, so the first frames never show it from the
+  // default camera. Keyed like the intro, by the loaded scene.
+  const [placedKey, setPlacedKey] = useState<string | null>(null)
   // Auto-framing needs the real viewport shape: the scene is a wide letterbox.
   const aspect = useThree((s) => s.size.width / s.size.height)
 
@@ -258,12 +262,16 @@ export function RoomScene({ page, onBusyChange }: RoomSceneProps) {
         onMovingChange={setCameraMoving}
         intro={intro}
         holdIntro={pending !== null}
+        onPlaced={setPlacedKey}
       />
 
       {bounds && <RoomLighting centre={bounds.centre} radius={bounds.radius} />}
 
       <group
         ref={roomRef}
+        // Bounds, shots and hotspots are still read from it while hidden:
+        // Box3 and raycasting ignore visibility.
+        visible={placedKey === roomModel.scene.uuid}
         position={chapter.transform.position}
         scale={chapter.transform.scale}
         rotation={chapter.transform.rotation}

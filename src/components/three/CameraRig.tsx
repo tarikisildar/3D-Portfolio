@@ -167,6 +167,13 @@ type CameraRigProps = {
    * played behind the curtain, and the map lifts onto a view of the plan.
    */
   holdIntro?: boolean
+  /**
+   * Called with the intro's key once the camera is in its starting pose for
+   * that room, so the room can stay hidden until then. Without it, the frame
+   * or two before the overhead pose showed the room from the default camera:
+   * a black, meaningless view on every load.
+   */
+  onPlaced?: (key: string) => void
 }
 
 /**
@@ -192,6 +199,7 @@ export function CameraRig({
   onMovingChange,
   intro,
   holdIntro = false,
+  onPlaced,
 }: CameraRigProps) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null)
   const invalidate = useThree((s) => s.invalidate)
@@ -203,6 +211,8 @@ export function CameraRig({
   // parent memoising it.
   const notify = useRef(onMovingChange)
   notify.current = onMovingChange
+  const placed = useRef(onPlaced)
+  placed.current = onPlaced
 
   // Animation state.
   const elapsed = useRef(0)
@@ -309,6 +319,8 @@ export function CameraRig({
     if (intro && intro.key !== introKey.current) {
       if (immediate || prefersReducedMotion()) {
         introKey.current = intro.key
+        // No descent: the camera goes straight to the shot below.
+        placed.current?.(intro.key)
       } else {
         const fov = fovForAspect(shot.fov, aspect)
         const start = introPose(shot, intro, fov, aspect)
@@ -319,6 +331,7 @@ export function CameraRig({
         camera.fov = fov
         camera.updateProjectionMatrix()
         to.current = shot
+        placed.current?.(intro.key)
 
         if (holdIntro) {
           // Park overhead; the key stays unplayed so releasing the hold
