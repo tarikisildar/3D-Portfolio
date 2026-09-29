@@ -23,6 +23,12 @@ export interface Project {
   id: number;
   title: string;
   slug: string;
+  /**
+   * When it was made: '2024', or a span like '2021–2024' (en dash). Shown in
+   * the projects list, which sorts by it, newest first. Leave it out only
+   * until you know it; undated projects go to the end.
+   */
+  year?: string;
   description: string;
   imageUrl: string;
   tags: string[];
@@ -38,6 +44,7 @@ const projects: Project[] = [
   {
     id: 11,
     title: 'Master\'s Thesis: Real-Time Depth Completion for AVs',
+    year: '2024–2025',
     slug: 'thesis',
     description: 'A novel sensor fusion system combining camera and LiDAR data for generating high-fidelity point clouds for autonomous vehicle teleoperation.',
     imageUrl: '/images/thesis.png',
@@ -92,6 +99,7 @@ const projects: Project[] = [
   {
     id: 10,
     title: "Visualization System for Autonomous Vehicle Teleoperation",
+    year: '2024',
     slug: "idp-interface",
     description: "Developed a real-time 3D visualization system for enhancing situational awareness in teleoperated autonomous vehicles, combining perception data with camera feeds.",
     imageUrl: "/images/tod_visual.png",
@@ -124,6 +132,7 @@ const projects: Project[] = [
   {
     id: 9,
     title: "Police Simulator: Patrol Officers",
+    year: '2021–2024',
     slug: "police-simulator",
     description: "A Police officer simulation game where players patrol accurately recreated city districts, enforce traffic laws, and investigate crime scenes. Recognized as one of the Top 5 Early Access Games of 2022 by Steam.",
     imageUrl: "/images/police.jpg",
@@ -171,6 +180,7 @@ const projects: Project[] = [
   {
     id: 5,
     title: "Judgement Day",
+    year: '2020',
     slug: "judgement-day",
     description: "Multiplayer, beat 'em up style, casual mobile game",
     imageUrl: "/images/judgement.png",
@@ -196,6 +206,7 @@ const projects: Project[] = [
   {
     id: 6,
     title: "Llamazing",
+    year: '2020',
     slug: "llamazing",
     description: "A WebGL based game where you control a llama in nature, built with Three.js for immersive browser-based gameplay",
     imageUrl: "/images/llamazing.png",
@@ -240,6 +251,7 @@ const projects: Project[] = [
   {
     id: 3,
     title: "Trivia Race Playable Ad",
+    year: '2020–2021',
     slug: "trivia-race-ad",
     description: "A lightweight WebGL playable advertisement for Trivia Race mobile game with 5+ million downloads, optimized to fit within 1MB as a single HTML file.",
     imageUrl: "/images/trivia-race.png",
@@ -275,6 +287,7 @@ const projects: Project[] = [
     id: 8,
     title: "Simulation Based Autonomous Driving",
     slug: "simulation-based-autonomous-driving",
+    year: '2023',
     description: "End-to-end neural network for autonomous navigation in complex urban environments using computer vision and deep learning techniques.",
     imageUrl: "/images/simulation.png",
     tags: ["Python", "PyTorch", "Autonomous Driving", "Deep Learning"],
@@ -310,6 +323,7 @@ const projects: Project[] = [
     id: 4,
     title: "Exerciser: AI-Powered Exercise Recognition Platform",
     slug: "Exerciser",
+    year: '2021',
     description: "A comprehensive mobile platform that uses computer vision to recognize physical therapy exercises, provide real-time feedback, and facilitate doctor-patient communication for rehabilitation.",
     imageUrl: "/images/exerciser.png",
     tags: ["Flutter", "Dart", "Python", "FastAPI", "MongoDB", "Docker"],
@@ -349,6 +363,7 @@ const projects: Project[] = [
   {
     id: 1,
     title: "Hyper Casuals Portfolio",
+    year: '2020–2021',
     slug: "hyper-casuals",
     description: "A collection of 9 hyper-casual mobile games developed for Apps, optimized for engagement and retention with lightweight, addictive gameplay mechanics.",
     imageUrl: "/images/hyper-casuals.png",
@@ -429,6 +444,7 @@ const projects: Project[] = [
   {
     id: 12,
     title: "Rhino is cool, But can it run doom?",
+    year: '2025',
     description: "On my new job at Adidas, they told me that I need to learn developping with a tool called Rhino/Grasshopper. Which is a 3D modeling and parametric design software that is used by the design team. I had some tasks like creating a tool there to implement a Graphics paper on python scripts. \n After playing around with the tool for a while, I realized that the visual scripting nodes let me draw pretty much anything on them. So that started my journey of creating a custom node library within the team and the first concept from it. \n CAN IT RUN DOOM! ",
     tags: ["Python", "Rhino", "C#"],
     links: [], 
@@ -446,6 +462,7 @@ const projects: Project[] = [
   {
     id: 13,
     title: "Gearshift",
+    year: '2026',
     description: "I was the main contributor of the software side of the Gearshift project, programming the bluetooth module, the garmin application to communicate and the overall software support for an ongoing project.",
     tags: ["Hardware", "Wearable"],
     links: [
@@ -470,6 +487,46 @@ const projects: Project[] = [
     ],
     slug: "gearshift",
     imageUrl: "/images/gearshift.png"
+  },
+  {
+    id: 14,
+    title: "NVAssistant",
+    year: '2024-2025',
+    description: "A personal AI assistant for engineers that I built during my internship at NVIDIA. Instead of jumping between Jira, Gerrit and Outlook all day, you ask one chat, and it finds out what changed. It was built around services that describe themselves to the model and all answer the same way: the idea the Model Context Protocol went on to make standard.",
+    tags: ["Python", "FastAPI", "React", "PostgreSQL", "LLM"],
+    links: [],
+    featured: false,
+    category: 'Software',
+    detailedContent: [
+      {
+        type: 'text',
+        content: "In a large company, the information you need every morning is spread across a dozen tools: tickets in Jira, code reviews in Gerrit, threads and meetings in Outlook. I noticed how much of my day went into jumping between them just to find out what had changed. LLMs offered a way out: one conversational interface in front of all of them."
+      },
+      {
+        type: 'text',
+        content: "NVAssistant is that interface. It writes you a daily summary of what happened across your tools, searches all of them at once, and can take simple actions on your behalf. I pitched it, designed it and shipped a working version in about three months, with a Python and FastAPI backend and a React frontend."
+      },
+      {
+        type: 'image',
+        content: "/images/nvassistant-flow.png",
+        caption: "How a question is answered: the model picks the services, every service answers through the same interface.",
+        aspectRatio: "16/9"
+      },
+      {
+        type: 'text',
+        content: "Every request goes through three steps. First, a request classifier: every endpoint the services offer is described in a single YAML file, and an LLM reads those descriptions together with your question and returns JSON saying which services to call, with which parameters (a ticket ID, a change number, an action). Second, a context gatherer: every service implements the same small interface, a gather_context function that returns text, so the gatherer can ask any of them without knowing how they work inside. Third, an LLM processor that writes the answer from everything gathered."
+      },
+      {
+        type: 'text',
+        content: "Looking back, that is the shape the Model Context Protocol later made standard: tools that describe what they can do to the model, and one uniform way to fetch context and take actions. Adding a new tool meant describing it and implementing one interface; the assistant itself didn't change. The next step I proposed went the same way the industry did: turn every service into its own independent agent, so any assistant could use them, not only this one."
+      },
+      {
+        type: 'text',
+        content: "What I learned: swapping the underlying model is easy, but every swap means re-tuning the prompts from scratch. Response speed was the real limit for letting the assistant loop through several steps on its own. And in a large company, getting access, security reviews and single sign-on sorted takes longer than writing the code."
+      }
+    ],
+    slug: "nvassistant",
+    imageUrl: "/images/nvassistant.png"
   }
 ];
 

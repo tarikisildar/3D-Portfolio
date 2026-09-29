@@ -41,6 +41,12 @@ export function ProjectDetail({
             <dt className="text-[0.625rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">Kind</dt>
             <dd className="mt-1">{project.category}</dd>
           </div>
+          {project.year && (
+            <div className="border-b border-[var(--rule-soft)] py-3">
+              <dt className="text-[0.625rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">Year</dt>
+              <dd className="u-figures mt-1">{project.year}</dd>
+            </div>
+          )}
           <div className="border-b border-[var(--rule-soft)] py-3">
             <dt className="text-[0.625rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">
               Built with

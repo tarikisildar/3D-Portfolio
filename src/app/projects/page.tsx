@@ -29,10 +29,16 @@ const KINDS: { value: Kind; label: string }[] = [
   { value: 'Game', label: 'Games' },
 ]
 
-const pad = (n: number) => String(n).padStart(2, '0')
-
-/** Numbered oldest-first, so a new project gets the next number and old numbers never shift. */
-const NUMBER = new Map([...projects].sort((a, b) => a.id - b.id).map((p, i) => [p.id, i + 1]))
+/**
+ * Newest first by year: a span counts by its last year ('2021–2024' as 2024),
+ * then by its first, then newest-added. Undated projects go last.
+ */
+function byYear(a: Project, b: Project) {
+  const years = (p: Project) => (p.year?.match(/\d{4}/g) ?? []).map(Number)
+  const [ya, yb] = [years(a), years(b)]
+  if (!ya.length || !yb.length) return yb.length - ya.length || b.id - a.id
+  return yb[yb.length - 1] - ya[ya.length - 1] || yb[0] - ya[0] || b.id - a.id
+}
 
 function ProjectsIndex() {
   const searchParams = useSearchParams()
@@ -44,7 +50,7 @@ function ProjectsIndex() {
   const [openSlug, setOpenSlug] = useState<string | null>(null)
 
   const inKind = useMemo(
-    () => projects.filter((p) => kind === 'All' || p.category === kind).sort((a, b) => b.id - a.id),
+    () => projects.filter((p) => kind === 'All' || p.category === kind).sort(byYear),
     [kind]
   )
   const visible = useMemo(() => (tool ? inKind.filter((p) => p.tags.includes(tool)) : inKind), [inKind, tool])
@@ -204,7 +210,6 @@ function ProjectsIndex() {
             <ProjectRow
               key={project.id}
               project={project}
-              number={NUMBER.get(project.id) ?? 0}
               open={openSlug === project.slug}
               onToggle={() => toggle(project)}
               onTool={filterByTool}
@@ -224,13 +229,11 @@ function ProjectsIndex() {
 
 function ProjectRow({
   project,
-  number,
   open,
   onToggle,
   onTool,
 }: {
   project: Project
-  number: number
   open: boolean
   onToggle: () => void
   onTool: (tool: string) => void
@@ -249,11 +252,12 @@ function ProjectRow({
         aria-expanded={open}
         aria-controls={panelId}
         data-preview={open ? undefined : project.imageUrl}
-        className="group grid w-full grid-cols-[4rem_minmax(0,1fr)_1.25rem] items-center gap-x-4 py-5 text-left focus:outline-none md:grid-cols-[2.5rem_5.5rem_minmax(0,1fr)_13rem_5.5rem_1.25rem] md:gap-x-6"
+        className="group grid w-full grid-cols-[4rem_minmax(0,1fr)_1.25rem] items-center gap-x-4 py-5 text-left focus:outline-none md:grid-cols-[4.5rem_5.5rem_minmax(0,1fr)_13rem_5.5rem_1.25rem] md:gap-x-6"
       >
-        {/* The number leads on wide screens; phones start with the picture. */}
-        <span className="u-figures hidden text-[0.875rem] text-[var(--ink-soft)] md:block">
-          {pad(number)}
+        {/* The year leads on wide screens, like the date column of a
+            drawing register; phones start with the picture. */}
+        <span className="u-figures hidden text-[0.8125rem] leading-tight text-[var(--ink-soft)] md:block">
+          {project.year}
         </span>
         <span className="relative aspect-square w-16 overflow-hidden bg-[var(--plaster-deep)] md:w-[5.5rem]">
           <Image
@@ -266,6 +270,11 @@ function ProjectRow({
         </span>
 
         <span className="min-w-0">
+          {project.year && (
+            <span className="u-figures mb-0.5 block text-[0.75rem] text-[var(--ink-soft)] md:hidden">
+              {project.year}
+            </span>
+          )}
           <span
             className="block text-[clamp(1.125rem,2vw,1.375rem)] leading-tight transition-colors group-hover:text-[var(--live)] group-focus-visible:text-[var(--live)]"
             style={{ fontVariationSettings: '"wdth" 108, "wght" 620' }}
@@ -296,9 +305,9 @@ function ProjectRow({
       </button>
 
       {open && (
-        // Indented to the title column on wide screens: number and thumbnail
-        // columns (2.5rem + 5.5rem) plus their gaps (2 × 1.5rem).
-        <div id={panelId} role="region" aria-label={project.title} className="md:pl-[11rem]">
+        // Indented to the title column on wide screens: year and thumbnail
+        // columns (4.5rem + 5.5rem) plus their gaps (2 × 1.5rem).
+        <div id={panelId} role="region" aria-label={project.title} className="md:pl-[13rem]">
           <ProjectDetail project={project} onTool={onTool} />
         </div>
       )}

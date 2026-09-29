@@ -121,6 +121,7 @@ export const cv: Cv = {
             'NDAS Parking: autonomous parking components in C++, from requirements through unit and integration tests.',
             'Bazel build scripts and a TypeScript visualisation tool for the wider team.',
           ],
+          links: [{ label: 'NVAssistant', href: '/projects?project=nvassistant' }],
           tags: ['C++', 'Python', 'Bazel', 'TypeScript'],
         },
         {

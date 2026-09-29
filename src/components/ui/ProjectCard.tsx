@@ -38,8 +38,8 @@ export default function ProjectCard({ project, onOpen }: ProjectCardProps) {
         />
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-[0.75rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-          {project.category}
+        <p className="u-figures text-[0.75rem] uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+          {[project.category, project.year].filter(Boolean).join(' · ')}
         </p>
         <h3
           className="mt-1 text-[1.25rem] leading-tight"
