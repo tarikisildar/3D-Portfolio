@@ -485,4 +485,45 @@ const projects: Project[] = [
   }
 ];
 
-export default projects;
+export default projects;  },
+  {
+    id: 14,
+    title: "NVAssistant",
+    // TODO: check the year. The internship ran Apr 2024 – Apr 2025 and the
+    // final presentation was in March 2025.
+    year: '2025',
+    description: "A personal AI assistant for engineers that I built during my internship at NVIDIA. Instead of jumping between Jira, Gerrit and Outlook all day, you ask one chat, and it finds out what changed. It was built around services that describe themselves to the model and all answer the same way: the idea the Model Context Protocol went on to make standard.",
+    tags: ["Python", "FastAPI", "React", "PostgreSQL", "LLM"],
+    links: [],
+    featured: false,
+    category: 'Software',
+    detailedContent: [
+      {
+        type: 'text',
+        content: "In a large company, the information you need every morning is spread across a dozen tools: tickets in Jira, code reviews in Gerrit, threads and meetings in Outlook. I noticed how much of my day went into jumping between them just to find out what had changed. LLMs offered a way out: one conversational interface in front of all of them."
+      },
+      {
+        type: 'text',
+        content: "NVAssistant is that interface. It writes you a daily summary of what happened across your tools, searches all of them at once, and can take simple actions on your behalf. I pitched it, designed it and shipped a working version in about three months, with a Python and FastAPI backend and a React frontend."
+      },
+      {
+        type: 'image',
+        content: "/images/nvassistant-flow.png",
+        caption: "How a question is answered: the model picks the services, every service answers through the same interface.",
+        aspectRatio: "16/9"
+      },
+      {
+        type: 'text',
+        content: "Every request goes through three steps. First, a request classifier: every endpoint the services offer is described in a single YAML file, and an LLM reads those descriptions together with your question and returns JSON saying which services to call, with which parameters (a ticket ID, a change number, an action). Second, a context gatherer: every service implements the same small interface, a gather_context function that returns text, so the gatherer can ask any of them without knowing how they work inside. Third, an LLM processor that writes the answer from everything gathered."
+      },
+      {
+        type: 'text',
+        content: "Looking back, that is the shape the Model Context Protocol later made standard: tools that describe what they can do to the model, and one uniform way to fetch context and take actions. Adding a new tool meant describing it and implementing one interface; the assistant itself didn't change. The next step I proposed went the same way the industry did: turn every service into its own independent agent, so any assistant could use them, not only this one."
+      },
+      {
+        type: 'text',
+        content: "What I learned: swapping the underlying model is easy, but every swap means re-tuning the prompts from scratch. Response speed was the real limit for letting the assistant loop through several steps on its own. And in a large company, getting access, security reviews and single sign-on sorted takes longer than writing the code."
+      }
+    ],
+    slug: "nvassistant",
+    imageUrl: "/images/nvassistant.png"
