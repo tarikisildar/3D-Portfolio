@@ -99,6 +99,7 @@ const projects: Project[] = [
   {
     id: 10,
     title: "Visualization System for Autonomous Vehicle Teleoperation",
+    year: '2024',
     slug: "idp-interface",
     description: "Developed a real-time 3D visualization system for enhancing situational awareness in teleoperated autonomous vehicles, combining perception data with camera feeds.",
     imageUrl: "/images/tod_visual.png",
@@ -179,6 +180,7 @@ const projects: Project[] = [
   {
     id: 5,
     title: "Judgement Day",
+    year: '2020',
     slug: "judgement-day",
     description: "Multiplayer, beat 'em up style, casual mobile game",
     imageUrl: "/images/judgement.png",
@@ -204,6 +206,7 @@ const projects: Project[] = [
   {
     id: 6,
     title: "Llamazing",
+    year: '2020',
     slug: "llamazing",
     description: "A WebGL based game where you control a llama in nature, built with Three.js for immersive browser-based gameplay",
     imageUrl: "/images/llamazing.png",
@@ -284,6 +287,7 @@ const projects: Project[] = [
     id: 8,
     title: "Simulation Based Autonomous Driving",
     slug: "simulation-based-autonomous-driving",
+    year: '2023',
     description: "End-to-end neural network for autonomous navigation in complex urban environments using computer vision and deep learning techniques.",
     imageUrl: "/images/simulation.png",
     tags: ["Python", "PyTorch", "Autonomous Driving", "Deep Learning"],
@@ -319,6 +323,7 @@ const projects: Project[] = [
     id: 4,
     title: "Exerciser: AI-Powered Exercise Recognition Platform",
     slug: "Exerciser",
+    year: '2021',
     description: "A comprehensive mobile platform that uses computer vision to recognize physical therapy exercises, provide real-time feedback, and facilitate doctor-patient communication for rehabilitation.",
     imageUrl: "/images/exerciser.png",
     tags: ["Flutter", "Dart", "Python", "FastAPI", "MongoDB", "Docker"],
@@ -457,7 +462,7 @@ const projects: Project[] = [
   {
     id: 13,
     title: "Gearshift",
-    year: '2025',
+    year: '2026',
     description: "I was the main contributor of the software side of the Gearshift project, programming the bluetooth module, the garmin application to communicate and the overall software support for an ongoing project.",
     tags: ["Hardware", "Wearable"],
     links: [
@@ -482,16 +487,11 @@ const projects: Project[] = [
     ],
     slug: "gearshift",
     imageUrl: "/images/gearshift.png"
-  }
-];
-
-export default projects;  },
+  },
   {
     id: 14,
     title: "NVAssistant",
-    // TODO: check the year. The internship ran Apr 2024 – Apr 2025 and the
-    // final presentation was in March 2025.
-    year: '2025',
+    year: '2024-2025',
     description: "A personal AI assistant for engineers that I built during my internship at NVIDIA. Instead of jumping between Jira, Gerrit and Outlook all day, you ask one chat, and it finds out what changed. It was built around services that describe themselves to the model and all answer the same way: the idea the Model Context Protocol went on to make standard.",
     tags: ["Python", "FastAPI", "React", "PostgreSQL", "LLM"],
     links: [],
@@ -527,3 +527,7 @@ export default projects;  },
     ],
     slug: "nvassistant",
     imageUrl: "/images/nvassistant.png"
+  }
+];
+
+export default projects;
